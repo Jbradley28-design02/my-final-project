@@ -9,6 +9,8 @@ website:
         text: Home
       - href: exploration.qmd
         text: Exploration
+      - href: story.qmd
+        text: Story
 
 format:
   html:

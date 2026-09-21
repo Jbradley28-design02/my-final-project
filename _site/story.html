@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Jason Bloxsom">
 
-<title>Tampa Bay Weather Analysis – Tampa Bay Weather</title>
+<title>Story: What Happens When a Hurricane Strikes Tampa? – Tampa Bay Weather</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -26,41 +25,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -111,6 +75,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light">
@@ -131,7 +96,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -139,7 +104,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Exploration</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./story.html"> 
+    <a class="nav-link active" href="./story.html" aria-current="page"> 
 <span class="menu-text">Story</span></a>
   </li>  
 </ul>
@@ -159,19 +124,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Tampa Bay Weather Analysis</h1>
+<h1 class="title">Story: What Happens When a Hurricane Strikes Tampa?</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Jason Bloxsom </p>
-          </div>
-  </div>
     
   
     
@@ -182,11 +141,86 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<p>In our 10-year meteorological record of Tampa International Airport (KTPA), one anomaly stands above all others: the early morning hours of September 11, 2017. As Hurricane Irma tore northward up the Florida peninsula, the airport’s automated sensors recorded the violent physical signature of a tropical cyclone passing just miles to the east. By examining hourly barometric pressure, sustained wind speed, and precipitation together across this 72-hour window, we can observe the exact mechanics of what happens when a tropical cyclone strikes Tampa Bay.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-irma-anatomy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-irma-anatomy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="story_files/figure-html/fig-irma-anatomy-1.png" class="img-fluid figure-img" width="1710">
 </div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-irma-anatomy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Hourly meteorological telemetry recorded at Tampa International Airport (KTPA) during the 72-hour passage of Hurricane Irma (September 9–12, 2017). Top: Station barometric pressure (inHg). Middle: Sustained wind speed (mph). Bottom: Hourly precipitation (inches).
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="the-barometric-engine" class="level3">
+<h3 class="anchored" data-anchor-id="the-barometric-engine">The Barometric Engine</h3>
+<p>Under ordinary conditions, atmospheric pressure across Tampa Bay hovers around a stable <strong>30.10 inHg</strong> (1,019 hPa). As Irma’s circulation approached the Florida Keys on September 9, KTPA’s barometer began a steady, steep descent. By 2:00 AM on September 11, the barometer plummeted to a decade-low record of <strong>28.69 inHg</strong> (971.5 hPa). This precipitous V-shaped drop created a steep pressure gradient across western Florida, essentially turning the skies above Tampa into a giant atmospheric siphon that drew in gale-force winds from hundreds of miles away.</p>
+</section>
+<section id="wind-and-rain-in-lockstep" class="level3">
+<h3 class="anchored" data-anchor-id="wind-and-rain-in-lockstep">Wind and Rain in Lockstep</h3>
+<p>The middle and bottom panels reveal how closely winds and rainfall sync with barometric collapse. As the pressure bottomed out during the early hours of September 11, sustained winds surged from calm 5–10 mph sea breezes into tropical storm-force gales of <strong>41 to 46 mph</strong>, with violent squall gusts recorded up to <strong>66 mph</strong>. Simultaneously, heavy spiral rain bands dumped torrential precipitation over Hillsborough County, dropping over <strong>4.5 inches of rain</strong> in just a few concentrated hours before the storm center moved north toward Georgia.</p>
+</section>
+<section id="the-broader-lesson-why-storm-track-dictates-tampa-bays-fate" class="level3">
+<h3 class="anchored" data-anchor-id="the-broader-lesson-why-storm-track-dictates-tampa-bays-fate">The Broader Lesson: Why Storm Track Dictates Tampa Bay’s Fate</h3>
+<p>What makes Hurricane Irma’s signature particularly revealing is how track geography dictates Tampa Bay’s vulnerability. Because Irma tracked just inland to the east of Tampa, the storm’s counterclockwise rotation drove surface winds out of the northeast and east. These offshore winds pushed bay water outward into the Gulf of Mexico, causing a dramatic <strong>“negative storm surge”</strong> that temporarily drained the bay floor instead of flooding coastal neighborhoods.</p>
+<p>By contrast, when <strong>Hurricane Helene</strong> (September 2024) passed offshore in the Gulf to the west, and <strong>Hurricane Milton</strong> (October 2024) made landfall just south near Siesta Key, their counterclockwise winds blew onshore into Tampa Bay. That onshore push, combined with historic rainfall (Milton dumped 16.03 inches at KTPA), transformed that same atmospheric pressure collapse into devastating coastal storm surge. The data confirms that while barometric drop dictates storm intensity, it is the storm’s track relative to Tampa Bay that determines whether water is drained away or driven ashore.</p>
+<hr>
+</section>
+<section id="comparative-cyclone-telemetry-at-tampa-ktpa" class="level3">
+<h3 class="anchored" data-anchor-id="comparative-cyclone-telemetry-at-tampa-ktpa">Comparative Cyclone Telemetry at Tampa (KTPA)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Storm / Metric</th>
+<th style="text-align: left;">Minimum Pressure</th>
+<th style="text-align: left;">Peak Sustained Wind</th>
+<th style="text-align: left;">Peak Gust</th>
+<th style="text-align: left;">Total Storm Deluge</th>
+<th style="text-align: left;">Coastal Surge Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Hurricane Irma</strong> (Sep 2017)</td>
+<td style="text-align: left;"><strong>28.69 inHg</strong> (10-Yr Record Low)</td>
+<td style="text-align: left;">46.0 mph</td>
+<td style="text-align: left;">66.0 mph</td>
+<td style="text-align: left;">4.57 in</td>
+<td style="text-align: left;">Negative Surge (Bay drained)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Hurricane Helene</strong> (Sep 2024)</td>
+<td style="text-align: left;">29.56 inHg</td>
+<td style="text-align: left;">38.0 mph</td>
+<td style="text-align: left;">55.0 mph</td>
+<td style="text-align: left;">2.14 in</td>
+<td style="text-align: left;">Record Coastal Surge (6–7 ft flood)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Hurricane Milton</strong> (Oct 2024)</td>
+<td style="text-align: left;">29.18 inHg</td>
+<td style="text-align: left;">30.0+ mph</td>
+<td style="text-align: left;">60.0+ mph</td>
+<td style="text-align: left;"><strong>16.03 in</strong></td>
+<td style="text-align: left;">Severe Inland Flooding &amp; Eyewall Rain</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

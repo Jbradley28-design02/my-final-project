@@ -13,6 +13,7 @@ execute:
 #| label: setup
 library(tidyverse)
 library(plotly)
+library(leaflet)
 
 # Load and combine all 10 years of hourly data (2015–2024)
 files <- list.files("data", pattern = "\\.csv$", full.names = TRUE)
@@ -494,3 +495,50 @@ plot_ly() |>
 | Aug 4, 2024 | **Hurricane Debby** | Wettest single day in modern record: 16.14 inches of rain in 24 hours |
 | Sep 26, 2024 | **Hurricane Helene** | Massive storm generated catastrophic 6–7 ft storm surge along the coast |
 | Oct 9, 2024 | **Hurricane Milton** | Direct strike on Tampa Bay: 16.03 inches of deluge and eyewall pressure dip |
+
+## 2. Tampa Bay Regional Weather Station Network
+
+Click or hover on any station to view its elevation, telemetry type, and role in monitoring Tampa Bay's coastal weather extremes. The red marker highlights **KTPA**, the primary anchor station used in the 10-year analysis above.
+
+```{r}
+#| label: weather-station-map
+stations <- tribble(
+  ~id, ~name, ~county, ~lat, ~lon, ~elev_ft, ~type, ~description,
+  "KTPA", "Tampa International Airport", "Hillsborough", 27.9755, -82.5332, 19, "Primary ASOS (Study Anchor)", "Central anchor station for this 10-year investigation. Recorded the 98.0°F record high and 16.14-inch Debby deluge.",
+  "KPIE", "St. Pete–Clearwater International", "Pinellas", 27.9108, -82.6874, 11, "Primary ASOS", "Key coastal Pinellas station exposed directly to Old Tampa Bay marine breezes and tropical storm surge threats.",
+  "KSPG", "Albert Whitted Airport", "Pinellas", 27.7651, -82.6270, 7, "ASOS", "Downtown St. Petersburg waterfront station; its low 7-foot elevation makes it critical for measuring bay water rise.",
+  "KMCF", "MacDill Air Force Base", "Hillsborough", 27.8494, -82.5211, 14, "Military Aerodrome", "Located at the tip of the South Tampa peninsula between Hillsborough Bay and Old Tampa Bay.",
+  "KVDF", "Tampa Executive Airport", "East Hillsborough", 28.0142, -82.3453, 22, "AWOS-3", "Inland Hillsborough station northeast of downtown Tampa; captures continental temperature swings away from water.",
+  "KLAL", "Lakeland Linder International", "Polk", 27.9889, -82.0186, 142, "ASOS", "Inland station east of Tampa Bay and home base to the world-renowned NOAA Hurricane Hunters flight operations.",
+  "KBKV", "Brooksville-Tampa Bay Regional", "Hernando", 28.4736, -82.4553, 77, "AWOS-3", "Northern perimeter station representing the Nature Coast boundary of the greater Tampa Bay region.",
+  "KSRQ", "Sarasota Bradenton International", "Manatee / Sarasota", 27.3956, -82.5544, 30, "Primary ASOS", "Southern gateway station near the landfall impact zone of Hurricane Milton (2024)."
+) |>
+  mutate(
+    marker_color = if_else(id == "KTPA", "#dc2626", "#2563eb"),
+    fill_color   = if_else(id == "KTPA", "#ef4444", "#3b82f6"),
+    radius_val   = if_else(id == "KTPA", 11, 8)
+  )
+
+leaflet(stations, height = 500) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~lon, lat = ~lat,
+    radius = ~radius_val,
+    color = ~marker_color,
+    fillColor = ~fill_color,
+    fillOpacity = 0.85,
+    weight = 2,
+    label = ~paste0(id, " — ", name),
+    popup = ~paste0(
+      "<div style=\"min-width:230px; font-family: system-ui, sans-serif;\">",
+      "<h4 style=\"margin:0 0 6px 0; color:#1e3a8a; font-size:15px;\"><b>", id, "</b> — ", name, "</h4>",
+      "<b>Network Type:</b> ", type, "<br>",
+      "<b>County:</b> ", county, "<br>",
+      "<b>Elevation:</b> ", elev_ft, " ft<br>",
+      "<b>Coordinates:</b> ", lat, "° N, ", abs(lon), "° W<br>",
+      "<hr style=\"margin:8px 0; border:0; border-top:1px solid #cbd5e1;\">",
+      "<p style=\"margin:0; font-size:12.5px; color:#334155; line-height:1.4;\">", description, "</p>",
+      "</div>"
+    )
+  )
+```

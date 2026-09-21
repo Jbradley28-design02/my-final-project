@@ -1,0 +1,15 @@
+project:
+  type: website
+
+website:
+  title: "Tampa Bay Weather"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: exploration.qmd
+        text: Exploration
+
+format:
+  html:
+    theme: cosmo

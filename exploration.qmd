@@ -1,0 +1,79 @@
+---
+title: "Interactive Weather Explorer"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(plotly)
+
+# Load and combine all yearly weather files
+files <- list.files("data", pattern = "\\.csv$", full.names = TRUE)
+
+daily_weather <- map(files, \(f) {
+  read_csv(f, col_types = cols(.default = col_character()), show_col_types = FALSE)
+}) |>
+  list_rbind() |>
+  mutate(
+    date = as.Date(DATE),
+    temp = parse_number(HourlyDryBulbTemperature),
+    wind = parse_number(HourlyWindSpeed),
+    precip = replace_na(parse_number(na_if(HourlyPrecipitation, "T")), 0)
+  ) |>
+  group_by(date) |>
+  summarize(
+    temp_avg = round(mean(temp, na.rm = TRUE), 1),
+    temp_max = suppressWarnings(max(temp, na.rm = TRUE)),
+    temp_min = suppressWarnings(min(temp, na.rm = TRUE)),
+    wind_max = suppressWarnings(max(wind, na.rm = TRUE)),
+    total_precip = round(sum(precip, na.rm = TRUE), 2),
+    .groups = "drop"
+  )
+```
+
+## 10-Year Weather Time-Series (2015–2024)
+
+Use the range slider below the plot to zoom in on specific years, months, or storm events, and hover over the line to view daily temperature records.
+
+```{r}
+#| label: time-series-plot
+plot_ly(
+  data = daily_weather,
+  x = ~date,
+  y = ~temp_avg,
+  type = "scatter",
+  mode = "lines",
+  line = list(color = "#1f77b4", width = 1.2),
+  name = "Average Temp (°F)",
+  hoverinfo = "text",
+  text = ~paste0(
+    "<b>Date:</b> ", date, "<br>",
+    "<b>Avg Temp:</b> ", temp_avg, " °F<br>",
+    "<b>High:</b> ", temp_max, " °F | <b>Low:</b> ", temp_min, " °F<br>",
+    "<b>Max Wind:</b> ", wind_max, " mph<br>",
+    "<b>Rainfall:</b> ", total_precip, " in"
+  )
+) |>
+  layout(
+    title = list(text = "Daily Temperatures & Extremes at Tampa International (KTPA)"),
+    xaxis = list(
+      title = "Date",
+      rangeslider = list(visible = TRUE),
+      rangeselector = list(
+        buttons = list(
+          list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+          list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+          list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+          list(count = 5, label = "5y", step = "year", stepmode = "backward"),
+          list(step = "all", label = "All")
+        )
+      )
+    ),
+    yaxis = list(title = "Average Temperature (°F)")
+  )
+```

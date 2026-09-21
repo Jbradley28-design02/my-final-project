@@ -1,0 +1,23 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Tampa Bay Weather Analysis",
+    "section": "",
+    "text": "library(tidyverse)"
+  },
+  {
+    "objectID": "exploration.html",
+    "href": "exploration.html",
+    "title": "Interactive Weather Explorer",
+    "section": "",
+    "text": "Use the range slider below the plot to zoom in on specific years, months, or storm events, and hover over the line to view daily temperature records."
+  },
+  {
+    "objectID": "exploration.html#year-weather-time-series-20152024",
+    "href": "exploration.html#year-weather-time-series-20152024",
+    "title": "Interactive Weather Explorer",
+    "section": "",
+    "text": "Use the range slider below the plot to zoom in on specific years, months, or storm events, and hover over the line to view daily temperature records."
+  }
+]

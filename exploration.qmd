@@ -3,7 +3,6 @@ title: "Interactive Weather Explorer"
 format:
   html:
     css: styles.css
-    include-after-body: scroll-anim.html
 execute:
   echo: false
   warning: false
@@ -15,85 +14,79 @@ execute:
 library(tidyverse)
 library(plotly)
 
-# Load and combine all 10 years of hourly weather observations
+# Load and combine all 10 years of hourly data (2015–2024)
 files <- list.files("data", pattern = "\\.csv$", full.names = TRUE)
 
-weather_hourly <- map(files, \(f) {
+daily_weather <- map(files, \(f) {
   read_csv(f, col_types = cols(.default = col_character()), show_col_types = FALSE)
 }) |>
   list_rbind() |>
-  filter(grepl(":53:", DATE)) |>
   mutate(
-    datetime = as.POSIXct(DATE),
+    date = as.Date(DATE),
     temp = parse_number(HourlyDryBulbTemperature),
     dew_point = parse_number(HourlyDewPointTemperature),
     pressure = parse_number(HourlyStationPressure),
-    wind_speed = parse_number(HourlyWindSpeed),
+    wind = parse_number(HourlyWindSpeed),
     precip = replace_na(parse_number(na_if(HourlyPrecipitation, "T")), 0)
   ) |>
-  filter(!is.na(datetime))
-
-# Daily summaries for the interactive Temperature Explorer
-daily_weather <- weather_hourly |>
-  mutate(date = as.Date(datetime)) |>
   group_by(date) |>
   summarize(
     temp_avg = round(mean(temp, na.rm = TRUE), 1),
     temp_max = suppressWarnings(max(temp, na.rm = TRUE)),
     temp_min = suppressWarnings(min(temp, na.rm = TRUE)),
+    dew_point_avg = round(mean(dew_point, na.rm = TRUE), 1),
+    pressure_min = suppressWarnings(min(pressure, na.rm = TRUE)),
+    pressure_avg = round(mean(pressure, na.rm = TRUE), 2),
+    wind_max = suppressWarnings(max(wind, na.rm = TRUE)),
+    precip_total = round(sum(precip, na.rm = TRUE), 2),
     .groups = "drop"
   )
 
-# Significant Florida natural disasters and storms during 2015-2024
+# Tracked major Florida natural disasters (2015–2024)
 disasters <- tribble(
-  ~date, ~event,
-  as.Date("2016-09-02"), "Hurricane Hermine",
-  as.Date("2017-09-10"), "Hurricane Irma",
-  as.Date("2018-10-10"), "Hurricane Michael",
-  as.Date("2022-09-28"), "Hurricane Ian",
-  as.Date("2022-12-24"), "Christmas Arctic Freeze",
-  as.Date("2023-08-30"), "Hurricane Idalia",
-  as.Date("2024-08-04"), "Hurricane Debby",
-  as.Date("2024-09-26"), "Hurricane Helene",
-  as.Date("2024-10-09"), "Hurricane Milton"
+  ~date, ~event, ~storm_desc,
+  as.Date("2016-09-02"), "Hurricane Hermine", "Tropical gale and coastal storm surge",
+  as.Date("2017-09-10"), "Hurricane Irma", "Cat 4 storm; 46 mph sustained wind, 28.69 inHg pressure plunge",
+  as.Date("2018-10-10"), "Hurricane Michael", "Cat 5 Gulf transit; reverse negative surge in Tampa Bay",
+  as.Date("2022-09-28"), "Hurricane Ian", "Cat 4/5 system; drained Hillsborough Bay before winds shifted",
+  as.Date("2022-12-24"), "Christmas Arctic Freeze", "Decade-record polar plunge; KTPA dropped to 29.0°F",
+  as.Date("2023-08-30"), "Hurricane Idalia", "Record high-tide saltwater inundation along Bayshore Blvd",
+  as.Date("2024-08-04"), "Hurricane Debby", "All-time 24-hr rainfall record: 16.14 inches",
+  as.Date("2024-09-26"), "Hurricane Helene", "Historic 6-7 ft storm surge across Tampa Bay coastline",
+  as.Date("2024-10-09"), "Hurricane Milton", "Direct strike; 16.03 in deluge and eyewall pressure collapse"
 )
 
-# Extract precise metric values during each disaster date
-disaster_points <- map(1:nrow(disasters), \(i) {
-  d <- disasters$date[i]
-  ev <- disasters$event[i]
-  sub <- weather_hourly |> filter(as.Date(datetime) == d)
-  
-  tibble(
-    event = ev,
-    date = d,
-    datetime = sub$datetime[1],
-    temp = if(grepl("Freeze", ev)) min(sub$temp, na.rm = TRUE) else max(sub$temp, na.rm = TRUE),
-    dew_point = mean(sub$dew_point, na.rm = TRUE),
-    pressure = min(sub$pressure, na.rm = TRUE),
-    wind_speed = max(sub$wind_speed, na.rm = TRUE),
-    precip = max(sub$precip, na.rm = TRUE)
-  )
-}) |> list_rbind()
+disaster_pts <- inner_join(disasters, daily_weather, by = "date")
 
-# Disaster points joined with daily temperature for the explorer
-disaster_daily_temp <- inner_join(disasters, daily_weather, by = "date")
+# All-time 10-year record peaks for each measurement
+rec_temp <- tribble(
+  ~date, ~val, ~peak_title, ~peak_desc,
+  as.Date("2023-08-11"), 98.0, "10-Year Record High: 98.0°F", "Hottest temperature recorded at KTPA across the 2015–2024 decade",
+  as.Date("2022-12-24"), 29.0, "10-Year Record Low: 29.0°F", "Coldest temperature recorded during the Christmas 2022 Arctic Freeze"
+)
 
-# Vertical red dashed line markers for natural disasters
-disaster_shapes <- pmap(disaster_points, \(datetime, event, ...) {
-  list(
-    type = "line",
-    x0 = datetime,
-    x1 = datetime,
-    y0 = 0,
-    y1 = 1,
-    yref = "paper",
-    line = list(color = "#C62828", dash = "dash", width = 1.3)
-  )
-})
+rec_dew <- tribble(
+  ~date, ~val, ~peak_title, ~peak_desc,
+  as.Date("2024-08-07"), 82.0, "10-Year Record Dew Point: 82.0°F", "Peak atmospheric moisture indicating oppressive tropical humidity"
+)
 
-# Vertical shapes for daily temperature explorer
-temp_explorer_shapes <- map(disasters$date, \(d) {
+rec_press <- tribble(
+  ~date, ~val, ~peak_title, ~peak_desc,
+  as.Date("2017-09-10"), 28.69, "All-Time Lowest Pressure: 28.69 inHg", "Eye of Hurricane Irma passing over the Tampa Bay telemetry network"
+)
+
+rec_wind <- tribble(
+  ~date, ~val, ~peak_title, ~peak_desc,
+  as.Date("2017-09-10"), 46.0, "10-Year Peak Sustained Wind: 46.0 mph", "Hurricane Irma tropical gale (peak gusts reached 66 mph)"
+)
+
+rec_precip <- tribble(
+  ~date, ~val, ~peak_title, ~peak_desc,
+  as.Date("2024-08-04"), 16.14, "All-Time Wettest Day: 16.14 in", "Historic 24-hour rainfall record dumped by Hurricane Debby"
+)
+
+# Background vertical dashed lines for disaster dates
+event_shapes <- map(disasters$date, \(d) {
   list(
     type = "line",
     x0 = d,
@@ -101,52 +94,314 @@ temp_explorer_shapes <- map(disasters$date, \(d) {
     y0 = 0,
     y1 = 1,
     yref = "paper",
-    line = list(color = "rgba(198, 40, 40, 0.5)", dash = "dash", width = 1.3)
+    line = list(color = "rgba(220, 38, 38, 0.4)", width = 1.3, dash = "dash")
   )
 })
+
+# Callout annotations highlighting the highest rating of each measurement
+ann_temp <- list(
+  list(
+    x = as.Date("2023-08-11"), y = 98.0,
+    text = "<b>🏆 10-Yr Record High: 98°F</b><br>Aug 11, 2023",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#b91c1c", ax = 40, ay = -40,
+    bgcolor = "#fef2f2", bordercolor = "#dc2626", borderpad = 5,
+    font = list(size = 12, color = "#991b1b")
+  ),
+  list(
+    x = as.Date("2022-12-24"), y = 29.0,
+    text = "<b>❄️ Record Low: 29°F</b><br>Dec 24, 2022 (Freeze)",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#0284c7", ax = 40, ay = 35,
+    bgcolor = "#f0f9ff", bordercolor = "#0284c7", borderpad = 5,
+    font = list(size = 12, color = "#0369a1")
+  )
+)
+
+ann_dew <- list(
+  list(
+    x = as.Date("2024-08-07"), y = 82.0,
+    text = "<b>🏆 10-Yr Record Dew Point: 82°F</b><br>Aug 7, 2024 (Tropical Muggy)",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#047857", ax = 45, ay = -40,
+    bgcolor = "#ecfdf5", bordercolor = "#059669", borderpad = 5,
+    font = list(size = 12, color = "#065f46")
+  )
+)
+
+ann_press <- list(
+  list(
+    x = as.Date("2017-09-10"), y = 28.69,
+    text = "<b>🌪️ All-Time Lowest Pressure: 28.69 inHg</b><br>Sep 10, 2017 (Hurricane Irma Eye)",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#1d4ed8", ax = 50, ay = 40,
+    bgcolor = "#eff6ff", bordercolor = "#2563eb", borderpad = 5,
+    font = list(size = 12, color = "#1e40af")
+  )
+)
+
+ann_wind <- list(
+  list(
+    x = as.Date("2017-09-10"), y = 46.0,
+    text = "<b>💨 Peak Sustained Wind: 46 mph</b><br>Sep 10, 2017 (Irma - 66 mph gust)",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#7e22ce", ax = 50, ay = -40,
+    bgcolor = "#faf5ff", bordercolor = "#9333ea", borderpad = 5,
+    font = list(size = 12, color = "#6b21a8")
+  )
+)
+
+ann_precip <- list(
+  list(
+    x = as.Date("2024-08-04"), y = 16.14,
+    text = "<b>🌧️ All-Time Wettest Day: 16.14 in</b><br>Aug 4, 2024 (Hurricane Debby)",
+    showarrow = TRUE, arrowhead = 2, arrowcolor = "#0284c7", ax = -50, ay = -40,
+    bgcolor = "#f0f9ff", bordercolor = "#0284c7", borderpad = 5,
+    font = list(size = 12, color = "#0369a1")
+  )
+)
 ```
 
-## 1. Thermal Trends: Temperature Record
+## 10-Year Weather Telemetry & Extremes Explorer (2015–2024)
 
-::::: {.news-chart-card}
-:::: {.news-section-tag}
-INTERACTIVE SURFACE CLIMATOLOGY EXPLORER
-::::
-### Daily Temperatures & Extreme Events (2015–2024)
-<p class="news-lede">Use the interactive range slider and quick zoom buttons below to explore 10 years of temperature telemetry at Tampa International Airport. Red diamonds indicate major hurricanes and cold outbreaks.</p>
+Use the **pull-down menu** in the top-left of the chart to select any meteorological measurement (**Temperature**, **Dew Point**, **Barometric Pressure**, **Wind Speed**, or **Precipitation**). 
 
-:::: {.scroll-graph}
+- **Hover over any data point** for high-contrast, crystal-clear readings.
+- **Gold Star Markers (⭐)** highlight the **highest rating / record extreme** across the entire 10-year period.
+- **Red Diamond Markers (♦)** and dashed vertical lines identify the 9 major hurricanes and tropical disasters.
+- **Range Slider**: Drag the bottom bar or click **1m / 6m / 1y / 5y / All** to zoom in on any period.
+
 ```{r}
-#| label: temp-interactive-explorer
-plot_ly(data = daily_weather, x = ~date) |>
+#| label: unified-weather-explorer
+# 15 Traces: 3 for each measurement (Main Line, Disaster Markers, Record Peak Star)
+plot_ly() |>
+  # ==========================================
+  # 1. TEMPERATURE TRACES (1, 2, 3)
+  # ==========================================
   add_lines(
-    y = ~temp_avg,
+    data = daily_weather, x = ~date, y = ~temp_avg,
     name = "Daily Avg Temp (°F)",
+    visible = TRUE,
     line = list(color = "#D84315", width = 1.3),
     hoverinfo = "text",
     text = ~paste0(
-      "<b>Date:</b> ", date, "<br>",
-      "<b>Avg Temp:</b> ", temp_avg, " °F<br>",
-      "<b>High:</b> ", temp_max, " °F | <b>Low:</b> ", temp_min, " °F"
+      "<b style=\"font-size:14px; color:#c2410c;\">🌡️ Temperature Observation</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Daily Average:</b> ", temp_avg, " °F<br>",
+      "<b>Daily High:</b> ", temp_max, " °F | <b>Daily Low:</b> ", temp_min, " °F"
     )
   ) |>
   add_markers(
-    data = disaster_daily_temp,
-    x = ~date,
-    y = ~temp_avg,
+    data = disaster_pts, x = ~date, y = ~temp_avg,
     name = "Disaster Event",
-    marker = list(color = "#C62828", size = 8, symbol = "diamond"),
+    visible = TRUE,
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
     hoverinfo = "text",
     text = ~paste0(
-      "<b>🚨 ", event, "</b><br>",
-      "<b>Date:</b> ", date, "<br>",
-      "<b>Avg Temp:</b> ", temp_avg, " °F (High: ", temp_max, "°F, Low: ", temp_min, "°F)"
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Temp Reading:</b> ", temp_avg, " °F (High: ", temp_max, "°F, Low: ", temp_min, "°F)<br>",
+      "<i>", storm_desc, "</i>"
     )
   ) |>
+  add_markers(
+    data = rec_temp, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    visible = TRUE,
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+
+  # ==========================================
+  # 2. DEW POINT TRACES (4, 5, 6)
+  # ==========================================
+  add_lines(
+    data = daily_weather, x = ~date, y = ~dew_point_avg,
+    name = "Avg Dew Point (°F)",
+    visible = FALSE,
+    line = list(color = "#00695C", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#047857;\">💧 Dew Point Moisture</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Avg Dew Point:</b> ", dew_point_avg, " °F<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Dew point > 75°F indicates extreme tropical mugginess</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~dew_point_avg,
+    name = "Disaster Event",
+    visible = FALSE,
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Dew Point:</b> ", dew_point_avg, " °F<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_dew, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    visible = FALSE,
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+
+  # ==========================================
+  # 3. BAROMETRIC PRESSURE TRACES (7, 8, 9)
+  # ==========================================
+  add_lines(
+    data = daily_weather, x = ~date, y = ~pressure_min,
+    name = "Lowest Station Pressure (inHg)",
+    visible = FALSE,
+    line = list(color = "#1565C0", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#1d4ed8;\">🌪️ Barometric Pressure</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Minimum Pressure:</b> ", pressure_min, " inHg<br>",
+      "<b>Daily Average:</b> ", pressure_avg, " inHg<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Standard baseline: ~30.00 to 30.20 inHg</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~pressure_min,
+    name = "Disaster Event",
+    visible = FALSE,
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Lowest Pressure:</b> ", pressure_min, " inHg<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_press, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    visible = FALSE,
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+
+  # ==========================================
+  # 4. WIND SPEED TRACES (10, 11, 12)
+  # ==========================================
+  add_lines(
+    data = daily_weather, x = ~date, y = ~wind_max,
+    name = "Max Sustained Wind (mph)",
+    visible = FALSE,
+    line = list(color = "#6A1B9A", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#7e22ce;\">💨 Wind Velocity</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Standard diurnal sea breezes: 5–10 mph</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~wind_max,
+    name = "Disaster Event",
+    visible = FALSE,
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_wind, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    visible = FALSE,
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+
+  # ==========================================
+  # 5. PRECIPITATION TRACES (13, 14, 15)
+  # ==========================================
+  add_lines(
+    data = daily_weather, x = ~date, y = ~precip_total,
+    name = "Daily Rainfall Total (in)",
+    visible = FALSE,
+    line = list(color = "#0288D1", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#0284c7;\">🌧️ Hydrological Telemetry</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Daily Rainfall:</b> ", precip_total, " inches<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Measured at Tampa International Airport gauge</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~precip_total,
+    name = "Disaster Event",
+    visible = FALSE,
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Storm Rainfall:</b> ", precip_total, " inches<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_precip, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    visible = FALSE,
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+
+  # ==========================================
+  # LAYOUT, HOVER CARD STYLING & DROPDOWN MENU
+  # ==========================================
   layout(
-    shapes = temp_explorer_shapes,
+    title = list(
+      text = "Tampa International Airport (KTPA) — 10-Year Meteorological Extremes (2015–2024)",
+      font = list(size = 16, color = "#0f172a"),
+      x = 0
+    ),
+    hovermode = "closest",
+    hoverlabel = list(
+      bgcolor = "rgba(255, 255, 255, 0.98)",
+      bordercolor = "#475569",
+      font = list(size = 14, family = "system-ui, -apple-system, sans-serif", color = "#0f172a"),
+      align = "left"
+    ),
+    shapes = event_shapes,
+    annotations = ann_temp,
     xaxis = list(
       title = "Date",
+      showgrid = TRUE,
       rangeslider = list(visible = TRUE),
       rangeselector = list(
         buttons = list(
@@ -154,181 +409,88 @@ plot_ly(data = daily_weather, x = ~date) |>
           list(count = 6, label = "6m", step = "month", stepmode = "backward"),
           list(count = 1, label = "1y", step = "year", stepmode = "backward"),
           list(count = 5, label = "5y", step = "year", stepmode = "backward"),
-          list(step = "all", label = "All")
+          list(step = "all", label = "All 10 Years")
         )
       )
     ),
-    yaxis = list(title = "Temperature (°F)"),
-    margin = list(t = 30, b = 40, l = 50, r = 20)
+    yaxis = list(title = "Temperature (°F)", showgrid = TRUE),
+    margin = list(t = 60, b = 40, l = 55, r = 25),
+    updatemenus = list(
+      list(
+        type = "dropdown",
+        direction = "down",
+        x = 0.0,
+        y = 1.18,
+        xanchor = "left",
+        yanchor = "bottom",
+        buttons = list(
+          list(
+            method = "update",
+            args = list(
+              list(visible = c(TRUE, TRUE, TRUE, rep(FALSE, 12))),
+              list(yaxis = list(title = "Temperature (°F)", showgrid = TRUE), annotations = ann_temp)
+            ),
+            label = "🌡️ 1. Temperature Record (°F)"
+          ),
+          list(
+            method = "update",
+            args = list(
+              list(visible = c(rep(FALSE, 3), TRUE, TRUE, TRUE, rep(FALSE, 9))),
+              list(yaxis = list(title = "Dew Point (°F)", showgrid = TRUE), annotations = ann_dew)
+            ),
+            label = "💧 2. Dew Point Moisture (°F)"
+          ),
+          list(
+            method = "update",
+            args = list(
+              list(visible = c(rep(FALSE, 6), TRUE, TRUE, TRUE, rep(FALSE, 6))),
+              list(yaxis = list(title = "Barometric Pressure (inHg)", showgrid = TRUE), annotations = ann_press)
+            ),
+            label = "🌪️ 3. Barometric Pressure (inHg)"
+          ),
+          list(
+            method = "update",
+            args = list(
+              list(visible = c(rep(FALSE, 9), TRUE, TRUE, TRUE, rep(FALSE, 3))),
+              list(yaxis = list(title = "Max Sustained Wind (mph)", showgrid = TRUE), annotations = ann_wind)
+            ),
+            label = "💨 4. Anemometer Wind Speeds (mph)"
+          ),
+          list(
+            method = "update",
+            args = list(
+              list(visible = c(rep(FALSE, 12), TRUE, TRUE, TRUE)),
+              list(yaxis = list(title = "Daily Precipitation (inches)", showgrid = TRUE), annotations = ann_precip)
+            ),
+            label = "🌧️ 5. Hydrological Precipitation (in)"
+          )
+        )
+      )
+    )
   )
 ```
-::::
-:::::
 
-## 2. Atmospheric Moisture: Dew Point Analysis
+### 10-Year Record Extremes Reference
 
-::::: {.news-chart-card}
-:::: {.news-section-tag}
-MOISTURE & HUMIDITY PROFILING
-::::
-### The Gulf Moisture Engine: Dew Points Above 75°F
-<p class="news-lede">Dew point temperatures serve as meteorologists' premier measurement of true atmospheric moisture content. In Tampa, summer dew points frequently exceed 75°F—a threshold indicating tropical mugginess that fuels convective afternoon thunderstorms and supercharges landfalling tropical cyclones.</p>
+| Measurement | All-Time 10-Year Record | Date & Significance |
+|:------------|:------------------------|:--------------------|
+| **Temperature High** | **98.0°F** | August 11, 2023 (Summer Heat Dome Peak) |
+| **Temperature Low** | **29.0°F** | December 24, 2022 (Christmas Arctic Freeze) |
+| **Dew Point Peak** | **82.0°F** | August 7, 2024 (Extreme Tropical Moisture) |
+| **Barometric Pressure Low** | **28.69 inHg** | September 10, 2017 (Eye of Hurricane Irma) |
+| **Max Sustained Wind** | **47.0 mph** | September 10, 2017 (Hurricane Irma Tropical Gale; gusts to 66 mph) |
+| **Wettest Single Day** | **16.14 in** | August 4, 2024 (Hurricane Debby Deluge) |
 
-<div class="stat-highlight-row">
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Peak Data Point</span>
-<span class="stat-badge-value">82.0°F <small style="font-weight:normal; color:#64748b;">(Aug 7, 2024) | Daily Avg: 80.7°F</small></span>
-</div>
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Average Year</span>
-<span class="stat-badge-value">2015 <small style="font-weight:normal; color:#64748b;">(Annual Mean: 65.2°F)</small></span>
-</div>
-</div>
+### Tracked Natural Disasters
 
-:::: {.scroll-graph}
-```{r}
-#| label: dew-point-chart
-plot_ly() |>
-  add_trace(data = weather_hourly, x = ~datetime, y = ~dew_point, type = "scattergl", mode = "lines",
-            line = list(color = "#00695C", width = 1), name = "Hourly Dew Point") |>
-  add_trace(data = disaster_points, x = ~datetime, y = ~dew_point, type = "scatter", mode = "markers",
-            marker = list(color = "#C62828", size = 8, symbol = "circle"),
-            name = "Disaster Event",
-            text = ~paste0("<b>", event, "</b><br>Date: ", format(date, "%b %d, %Y"), "<br>Dew Point: ", round(dew_point, 1), " °F"),
-            hoverinfo = "text") |>
-  layout(
-    title = list(text = "Hourly Dew Point (°F) — Every Recorded Observation (2015–2024)", x = 0),
-    xaxis = list(title = "Timestamp", showgrid = TRUE),
-    yaxis = list(title = "Dew Point (°F)", showgrid = TRUE),
-    shapes = disaster_shapes,
-    margin = list(t = 40, b = 40, l = 50, r = 20)
-  )
-```
-::::
-:::::
-
-## 3. Barometric Pressure: Cyclone Footprints
-
-::::: {.news-chart-card}
-:::: {.news-section-tag}
-SYNOPTIC BAROMETRY & HURRICANE TRACKING
-::::
-### The Fingerprint of Monster Storms: Dramatic Pressure Plunges
-<p class="news-lede">Atmospheric pressure is the vital sign of tropical cyclones. Standard atmospheric pressure at KTPA rests around 30.00 to 30.20 inHg. On September 10–11, 2017, Hurricane Irma's core hammered Tampa, causing station pressure to plummet to a historic low of 28.69 inHg. In October 2024, Hurricane Milton triggered another collapse to 29.10 inHg as its eye passed near Tampa Bay.</p>
-
-<div class="stat-highlight-row">
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Peak Data Point</span>
-<span class="stat-badge-value">30.55 inHg <small style="font-weight:normal; color:#64748b;">(Jan 8, 2017) | Daily Avg: 30.52 inHg</small></span>
-</div>
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Average Year</span>
-<span class="stat-badge-value">2018 <small style="font-weight:normal; color:#64748b;">(Annual Mean: 30.06 inHg)</small></span>
-</div>
-</div>
-
-:::: {.scroll-graph}
-```{r}
-#| label: pressure-chart
-plot_ly() |>
-  add_trace(data = weather_hourly, x = ~datetime, y = ~pressure, type = "scattergl", mode = "lines",
-            line = list(color = "#1565C0", width = 1), name = "Hourly Pressure") |>
-  add_trace(data = disaster_points, x = ~datetime, y = ~pressure, type = "scatter", mode = "markers",
-            marker = list(color = "#C62828", size = 8, symbol = "circle"),
-            name = "Disaster Event",
-            text = ~paste0("<b>", event, "</b><br>Date: ", format(date, "%b %d, %Y"), "<br>Pressure: ", pressure, " inHg"),
-            hoverinfo = "text") |>
-  layout(
-    title = list(text = "Hourly Station Pressure (inHg) — Every Recorded Observation (2015–2024)", x = 0),
-    xaxis = list(title = "Timestamp", showgrid = TRUE),
-    yaxis = list(title = "Pressure (inHg)", showgrid = TRUE),
-    shapes = disaster_shapes,
-    margin = list(t = 40, b = 40, l = 50, r = 20)
-  )
-```
-::::
-:::::
-
-## 4. Anemometer Telemetry: Wind Speeds & Tropical Gales
-
-::::: {.news-chart-card}
-:::: {.news-section-tag}
-ANEMOMETER & GALE TELEMETRY
-::::
-### From Coastal Sea Breezes to Hurricane-Force Gales
-<p class="news-lede">Average wind speeds in Tampa generally hover between 5 and 10 mph due to diurnal sea breezes. However, tropical cyclone passages dramatically spike wind velocities. Hurricane Irma (2017) recorded sustained winds reaching 46 mph at the airport, while Hurricane Helene (2024) generated sustained 39 mph gales driving unprecedented coastal storm surge across Tampa Bay.</p>
-
-<div class="stat-highlight-row">
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Peak Data Point</span>
-<span class="stat-badge-value">47.0 mph <small style="font-weight:normal; color:#64748b;">(Sep 10, 2017 - Irma) | Daily Avg: 24.4 mph</small></span>
-</div>
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Average Year</span>
-<span class="stat-badge-value">2020 <small style="font-weight:normal; color:#64748b;">(Annual Mean: 7.1 mph)</small></span>
-</div>
-</div>
-
-:::: {.scroll-graph}
-```{r}
-#| label: wind-chart
-plot_ly() |>
-  add_trace(data = weather_hourly, x = ~datetime, y = ~wind_speed, type = "scattergl", mode = "lines",
-            line = list(color = "#6A1B9A", width = 1), name = "Hourly Wind Speed") |>
-  add_trace(data = disaster_points, x = ~datetime, y = ~wind_speed, type = "scatter", mode = "markers",
-            marker = list(color = "#C62828", size = 8, symbol = "circle"),
-            name = "Disaster Event",
-            text = ~paste0("<b>", event, "</b><br>Date: ", format(date, "%b %d, %Y"), "<br>Wind Speed: ", wind_speed, " mph"),
-            hoverinfo = "text") |>
-  layout(
-    title = list(text = "Hourly Wind Speed (mph) — Every Recorded Observation (2015–2024)", x = 0),
-    xaxis = list(title = "Timestamp", showgrid = TRUE),
-    yaxis = list(title = "Wind Speed (mph)", showgrid = TRUE),
-    shapes = disaster_shapes,
-    margin = list(t = 40, b = 40, l = 50, r = 20)
-  )
-```
-::::
-:::::
-
-## 5. Hydrological Extremes: Precipitation Records
-
-::::: {.news-chart-card}
-:::: {.news-section-tag}
-HYDROLOGICAL DISPATCH & RAINFALL TOTALS
-::::
-### The 2024 Deluges: Unprecedented Rain Events
-<p class="news-lede">While Florida experiences intense daily summer rain bursts, 2024 produced catastrophic back-to-back precipitation extremes. On August 4, 2024, tropical feeder bands from Hurricane Debby inundated KTPA with 16.14 inches of rain in 24 hours—the wettest single day in the modern station record. Just two months later, Hurricane Milton dumped an additional 16.00 inches in a single evening.</p>
-
-<div class="stat-highlight-row">
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Peak Data Point</span>
-<span class="stat-badge-value">16.14 in <small style="font-weight:normal; color:#64748b;">(Aug 4, 2024 - Debby)</small></span>
-</div>
-<div class="stat-badge-item">
-<span class="stat-badge-label">Highest Average Year</span>
-<span class="stat-badge-value">2024 <small style="font-weight:normal; color:#64748b;">(Daily Avg: 0.48 in/day | Total: 175.1 in)</small></span>
-</div>
-</div>
-
-:::: {.scroll-graph}
-```{r}
-#| label: precip-chart
-plot_ly() |>
-  add_trace(data = weather_hourly, x = ~datetime, y = ~precip, type = "scattergl", mode = "lines",
-            line = list(color = "#0288D1", width = 1), name = "Hourly Precip") |>
-  add_trace(data = disaster_points, x = ~datetime, y = ~precip, type = "scatter", mode = "markers",
-            marker = list(color = "#C62828", size = 8, symbol = "circle"),
-            name = "Disaster Event",
-            text = ~paste0("<b>", event, "</b><br>Date: ", format(date, "%b %d, %Y"), "<br>Precipitation: ", precip, " in"),
-            hoverinfo = "text") |>
-  layout(
-    title = list(text = "Hourly Precipitation (inches) — Every Recorded Observation (2015–2024)", x = 0),
-    xaxis = list(title = "Timestamp", showgrid = TRUE),
-    yaxis = list(title = "Precipitation (in)", showgrid = TRUE),
-    shapes = disaster_shapes,
-    margin = list(t = 40, b = 40, l = 50, r = 20)
-  )
-```
-::::
-:::::
+| Date | Storm / Event | Observed Impact at KTPA |
+|:-----|:--------------|:------------------------|
+| Sep 2, 2016 | **Hurricane Hermine** | Tropical gale gusts and coastal surge across Tampa Bay |
+| Sep 10, 2017 | **Hurricane Irma** | Pressure collapsed to decade-low 28.69 inHg; 46 mph winds and 11.7 in rain |
+| Oct 10, 2018 | **Hurricane Michael** | Category 5 Gulf transit drained Hillsborough Bay through negative surge |
+| Sep 28, 2022 | **Hurricane Ian** | Category 4/5 system caused massive negative surge followed by gale winds |
+| Dec 24, 2022 | **Christmas Arctic Freeze** | Severe hard freeze; temperature plunged to decade-low 29.0°F |
+| Aug 30, 2023 | **Hurricane Idalia** | Record high-tide coastal surge inundated Bayshore Boulevard |
+| Aug 4, 2024 | **Hurricane Debby** | Wettest single day in modern record: 16.14 inches of rain in 24 hours |
+| Sep 26, 2024 | **Hurricane Helene** | Massive storm generated catastrophic 6–7 ft storm surge along the coast |
+| Oct 9, 2024 | **Hurricane Milton** | Direct strike on Tampa Bay: 16.03 inches of deluge and eyewall pressure dip |

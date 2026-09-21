@@ -75,5 +75,12 @@
     "title": "Interactive Weather Explorer",
     "section": "2. Tampa Bay Regional Weather Station Network",
     "text": "2. Tampa Bay Regional Weather Station Network\nClick or hover on any station to view its elevation, telemetry type, and role in monitoring Tampa Bay’s coastal weather extremes. The red marker highlights KTPA, the primary anchor station used in the 10-year analysis above."
+  },
+  {
+    "objectID": "exploration.html#real-time-telemetry-feed-ktpa",
+    "href": "exploration.html#real-time-telemetry-feed-ktpa",
+    "title": "Interactive Weather Explorer",
+    "section": "3. Real-Time Telemetry Feed (KTPA)",
+    "text": "3. Real-Time Telemetry Feed (KTPA)\nLive observations streamed directly from the National Weather Service automated sensor network at Tampa International Airport.\n\n  \n    \n       LIVE NWS BROADCAST\n      KTPA — Tampa International Airport Telemetry\n      Observed Live\n    \n    \n      Loading...\n      🔄 Refresh\n    \n  \n\n  \n    \n      🌡️\n      --.-°F\n      Live Temperature\n    \n    \n      💧\n      --.-°F\n      Live Dew Point\n    \n    \n      🌪️\n      --.-- inHg\n      Live Pressure\n    \n    \n      💨\n      -- mph\n      Live Wind Speed\n    \n    \n      🌧️\n      -- in\n      Live Rain (1-Hr)"
   }
 ]

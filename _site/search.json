@@ -11,7 +11,7 @@
     "href": "exploration.html",
     "title": "Interactive Weather Explorer",
     "section": "",
-    "text": "Use the range slider below the plot to zoom in on specific years, months, or storm events, and hover over the line to view daily temperature records."
+    "text": "INTERACTIVE SURFACE CLIMATOLOGY EXPLORER\n\n\n\n\nUse the interactive range slider and quick zoom buttons below to explore 10 years of temperature telemetry at Tampa International Airport. Red diamonds indicate major hurricanes and cold outbreaks."
   },
   {
     "objectID": "exploration.html#year-weather-time-series-20152024",
@@ -19,5 +19,47 @@
     "title": "Interactive Weather Explorer",
     "section": "",
     "text": "Use the range slider below the plot to zoom in on specific years, months, or storm events, and hover over the line to view daily temperature records."
+  },
+  {
+    "objectID": "exploration.html#year-weather-measurements-explorer-20152024",
+    "href": "exploration.html#year-weather-measurements-explorer-20152024",
+    "title": "Interactive Weather Explorer",
+    "section": "",
+    "text": "Use the pull-down menu in the top-left of the chart to explore Temperature, Dew Point, Barometric Pressure, Wind Speed, and Precipitation.\nThe red dashed lines and red diamond markers highlight major hurricanes, tropical storms, and extreme cold snaps that directly impacted the Tampa Bay area.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDate\nStorm / Event\nSignificance in Tampa Bay\n\n\n\n\nSep 2, 2016\nHurricane Hermine\nFirst hurricane to hit Florida since 2005; brought storm surge and heavy squalls.\n\n\nSep 10, 2017\nHurricane Irma\nMassive Category 4 system; pressure plunged to 29.4 inHg and winds hit 46 mph.\n\n\nOct 10, 2018\nHurricane Michael\nCategory 5 storm in the Florida Panhandle; outer spiral bands impacted Tampa.\n\n\nSep 28, 2022\nHurricane Ian\nCatastrophic Category 5 system causing severe coastal winds and surge in SW Florida and Tampa.\n\n\nDec 24, 2022\nChristmas Arctic Freeze\nHistoric polar plunge; temperatures at KTPA dropped to 29°F.\n\n\nAug 30, 2023\nHurricane Idalia\nMajor hurricane causing record storm surge in Tampa Bay and the Big Bend.\n\n\nAug 4, 2024\nHurricane Debby\nSlow-moving system dumping 16.1 inches of rain in Tampa.\n\n\nSep 26, 2024\nHurricane Helene\nMassive storm producing historic storm surge along the Tampa Bay coast.\n\n\nOct 9, 2024\nHurricane Milton\nDirect strike on the Tampa Bay area with 16.0 inches of deluge rainfall and 33+ mph sustained winds."
+  },
+  {
+    "objectID": "exploration.html#thermal-trends-temperature-record",
+    "href": "exploration.html#thermal-trends-temperature-record",
+    "title": "Interactive Weather Explorer",
+    "section": "",
+    "text": "INTERACTIVE SURFACE CLIMATOLOGY EXPLORER\n\n\n\n\nUse the interactive range slider and quick zoom buttons below to explore 10 years of temperature telemetry at Tampa International Airport. Red diamonds indicate major hurricanes and cold outbreaks."
+  },
+  {
+    "objectID": "exploration.html#atmospheric-moisture-dew-point-analysis",
+    "href": "exploration.html#atmospheric-moisture-dew-point-analysis",
+    "title": "Interactive Weather Explorer",
+    "section": "2. Atmospheric Moisture: Dew Point Analysis",
+    "text": "2. Atmospheric Moisture: Dew Point Analysis\n\n\nMOISTURE & HUMIDITY PROFILING\n\n\nThe Gulf Moisture Engine: Dew Points Above 75°F\n\nDew point temperatures serve as meteorologists’ premier measurement of true atmospheric moisture content. In Tampa, summer dew points frequently exceed 75°F—a threshold indicating tropical mugginess that fuels convective afternoon thunderstorms and supercharges landfalling tropical cyclones.\n\n\n\nHighest Peak Data Point 82.0°F (Aug 7, 2024) | Daily Avg: 80.7°F\n\n\nHighest Average Year 2015 (Annual Mean: 65.2°F)"
+  },
+  {
+    "objectID": "exploration.html#barometric-pressure-cyclone-footprints",
+    "href": "exploration.html#barometric-pressure-cyclone-footprints",
+    "title": "Interactive Weather Explorer",
+    "section": "3. Barometric Pressure: Cyclone Footprints",
+    "text": "3. Barometric Pressure: Cyclone Footprints\n\n\nSYNOPTIC BAROMETRY & HURRICANE TRACKING\n\n\nThe Fingerprint of Monster Storms: Dramatic Pressure Plunges\n\nAtmospheric pressure is the vital sign of tropical cyclones. Standard atmospheric pressure at KTPA rests around 30.00 to 30.20 inHg. On September 10–11, 2017, Hurricane Irma’s core hammered Tampa, causing station pressure to plummet to a historic low of 28.69 inHg. In October 2024, Hurricane Milton triggered another collapse to 29.10 inHg as its eye passed near Tampa Bay.\n\n\n\nHighest Peak Data Point 30.55 inHg (Jan 8, 2017) | Daily Avg: 30.52 inHg\n\n\nHighest Average Year 2018 (Annual Mean: 30.06 inHg)"
+  },
+  {
+    "objectID": "exploration.html#anemometer-telemetry-wind-speeds-tropical-gales",
+    "href": "exploration.html#anemometer-telemetry-wind-speeds-tropical-gales",
+    "title": "Interactive Weather Explorer",
+    "section": "4. Anemometer Telemetry: Wind Speeds & Tropical Gales",
+    "text": "4. Anemometer Telemetry: Wind Speeds & Tropical Gales\n\n\nANEMOMETER & GALE TELEMETRY\n\n\nFrom Coastal Sea Breezes to Hurricane-Force Gales\n\nAverage wind speeds in Tampa generally hover between 5 and 10 mph due to diurnal sea breezes. However, tropical cyclone passages dramatically spike wind velocities. Hurricane Irma (2017) recorded sustained winds reaching 46 mph at the airport, while Hurricane Helene (2024) generated sustained 39 mph gales driving unprecedented coastal storm surge across Tampa Bay.\n\n\n\nHighest Peak Data Point 47.0 mph (Sep 10, 2017 - Irma) | Daily Avg: 24.4 mph\n\n\nHighest Average Year 2020 (Annual Mean: 7.1 mph)"
+  },
+  {
+    "objectID": "exploration.html#hydrological-extremes-precipitation-records",
+    "href": "exploration.html#hydrological-extremes-precipitation-records",
+    "title": "Interactive Weather Explorer",
+    "section": "5. Hydrological Extremes: Precipitation Records",
+    "text": "5. Hydrological Extremes: Precipitation Records\n\n\nHYDROLOGICAL DISPATCH & RAINFALL TOTALS\n\n\nThe 2024 Deluges: Unprecedented Rain Events\n\nWhile Florida experiences intense daily summer rain bursts, 2024 produced catastrophic back-to-back precipitation extremes. On August 4, 2024, tropical feeder bands from Hurricane Debby inundated KTPA with 16.14 inches of rain in 24 hours—the wettest single day in the modern station record. Just two months later, Hurricane Milton dumped an additional 16.00 inches in a single evening.\n\n\n\nHighest Peak Data Point 16.14 in (Aug 4, 2024 - Debby)\n\n\nHighest Average Year 2024 (Daily Avg: 0.48 in/day | Total: 175.1 in)"
   }
 ]

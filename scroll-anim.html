@@ -1,0 +1,39 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function initTitleTriggerGraphing() {
+    const cards = document.querySelectorAll(".news-chart-card");
+
+    function checkCards() {
+      const windowHeight = window.innerHeight;
+
+      cards.forEach(function (card) {
+        const graph = card.querySelector(".scroll-graph") || card.querySelector(".plotly");
+        if (!graph || graph.classList.contains("drawn")) return;
+
+        const rect = card.getBoundingClientRect();
+        // Trigger as soon as the card / section title arrives in view (top 85% of viewport)
+        if (rect.top <= windowHeight * 0.85) {
+          graph.classList.add("drawn");
+
+          // Remove clipping once the 3.25s animation completes to ensure 100% interactive hover tooltips
+          setTimeout(function () {
+            graph.style.clipPath = "none";
+            graph.style.webkitClipPath = "none";
+          }, 3300);
+        }
+      });
+    }
+
+    window.addEventListener("scroll", checkCards, { passive: true });
+    window.addEventListener("resize", checkCards);
+
+    // Initial checks for elements already near/at top of page
+    checkCards();
+    setTimeout(checkCards, 150);
+    setTimeout(checkCards, 500);
+    setTimeout(checkCards, 1000);
+  }
+
+  initTitleTriggerGraphing();
+});
+</script>

@@ -1,0 +1,14 @@
+---
+title: "Tampa Bay Weather Analysis"
+author: "Jason Bloxsom"
+format: html
+execute:
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+```

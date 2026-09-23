@@ -1,9 +1,13 @@
 ---
 title: "Tampa Bay Weather Analysis"
 author: "Jason Bloxsom"
-format: html
+format:
+  html:
+    css: styles.css
 execute:
-  echo: true
+  echo: false
+  warning: false
+  message: false
 ---
 
 ```{r}
@@ -11,4 +15,155 @@ execute:
 #| message: false
 
 library(tidyverse)
+library(leaflet)
+library(jsonlite)
+
+# Fetch initial real-time telemetry from NWS API for KTPA
+live_init <- tryCatch({
+  req <- fromJSON("https://api.weather.gov/stations/KTPA/observations/latest")
+  p <- req$properties
+  list(
+    temp = paste0(round(p$temperature$value * 9/5 + 32, 1), "°F"),
+    dew = paste0(round(p$dewpoint$value * 9/5 + 32, 1), "°F"),
+    press = paste0(round(p$barometricPressure$value / 3386.39, 2), " inHg"),
+    wind = if (round(p$windSpeed$value * 0.621371, 1) == 0) "Calm" else paste0(round(p$windSpeed$value * 0.621371, 1), " mph"),
+    precip = if (is.null(p$precipitationLastHour$value) || is.na(p$precipitationLastHour$value)) "0.00 in" else paste0(round(p$precipitationLastHour$value * 39.3701, 2), " in"),
+    condition = if (!is.null(p$textDescription)) p$textDescription else "Observed",
+    time = format(as.POSIXct(p$timestamp), "%I:%M %p")
+  )
+}, error = \(e) {
+  list(temp = "75.2°F", dew = "71.6°F", press = "29.93 inHg", wind = "Calm", precip = "0.00 in", condition = "Clear", time = "Live")
+})
+```
+
+## Real-Time Telemetry Feed (KTPA)
+
+Live observations streamed directly from the National Weather Service automated sensor network at Tampa International Airport.
+
+```{=html}
+<div class="live-telemetry-box">
+  <div class="live-telemetry-header">
+    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <span class="live-pill"><span class="live-pulse-dot"></span> LIVE NWS BROADCAST</span>
+      <span style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">KTPA — Tampa International Airport Telemetry</span>
+      <span id="live-time-str" style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Observed Live</span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <span id="live-condition-badge" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700;">Loading...</span>
+      <button id="live-refresh-btn" class="live-refresh-btn" onclick="fetchLiveKTPAWeather()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <div class="live-grid">
+    <div class="live-card">
+      <div class="live-card-icon">🌡️</div>
+      <div id="live-temp-val" class="live-card-val">--.-°F</div>
+      <div class="live-card-label">Live Temperature</div>
+    </div>
+    <div class="live-card">
+      <div class="live-card-icon">💧</div>
+      <div id="live-dew-val" class="live-card-val">--.-°F</div>
+      <div class="live-card-label">Live Dew Point</div>
+    </div>
+    <div class="live-card">
+      <div class="live-card-icon">🌪️</div>
+      <div id="live-press-val" class="live-card-val">--.-- inHg</div>
+      <div class="live-card-label">Live Pressure</div>
+    </div>
+    <div class="live-card">
+      <div class="live-card-icon">💨</div>
+      <div id="live-wind-val" class="live-card-val">-- mph</div>
+      <div class="live-card-label">Live Wind Speed</div>
+    </div>
+    <div class="live-card">
+      <div class="live-card-icon">🌧️</div>
+      <div id="live-precip-val" class="live-card-val">-- in</div>
+      <div class="live-card-label">Live Rain (1-Hr)</div>
+    </div>
+  </div>
+</div>
+
+<script src="live-weather.js"></script>
+```
+
+## Tampa Bay Regional Weather Station Network
+
+Click or hover on any station to view its elevation, telemetry type, and role in monitoring Tampa Bay's coastal weather extremes. The red marker highlights **KTPA**, the primary anchor station.
+
+```{r}
+#| label: weather-station-map
+get_station_obs <- function(station_id) {
+  tryCatch({
+    url <- paste0("https://api.weather.gov/stations/", station_id, "/observations/latest")
+    req <- fromJSON(url)
+    p <- req$properties
+    tibble(
+      id = station_id,
+      live_temp = if (!is.null(p$temperature$value) && !is.na(p$temperature$value)) paste0(round(p$temperature$value * 9/5 + 32, 1), "°F") else "N/A",
+      live_dew = if (!is.null(p$dewpoint$value) && !is.na(p$dewpoint$value)) paste0(round(p$dewpoint$value * 9/5 + 32, 1), "°F") else "N/A",
+      live_press = if (!is.null(p$barometricPressure$value) && !is.na(p$barometricPressure$value)) paste0(round(p$barometricPressure$value / 3386.39, 2), " inHg") else "N/A",
+      live_wind = if (!is.null(p$windSpeed$value) && !is.na(p$windSpeed$value)) {
+        w <- round(p$windSpeed$value * 0.621371, 1)
+        if (w == 0) "Calm" else paste0(w, " mph")
+      } else "N/A",
+      live_cond = if (!is.null(p$textDescription) && nzchar(p$textDescription)) p$textDescription else "Observed"
+    )
+  }, error = \(e) {
+    tibble(id = station_id, live_temp = "N/A", live_dew = "N/A", live_press = "N/A", live_wind = "N/A", live_cond = "Offline")
+  })
+}
+
+stations_raw <- tribble(
+  ~id, ~name, ~county, ~lat, ~lon, ~elev_ft, ~type, ~description,
+  "KTPA", "Tampa International Airport", "Hillsborough", 27.9755, -82.5332, 19, "Primary ASOS (Study Anchor)", "Central anchor station for this 10-year investigation. Recorded the 98.0°F record high and 16.14-inch Debby deluge.",
+  "KPIE", "St. Pete–Clearwater International", "Pinellas", 27.9108, -82.6874, 11, "Primary ASOS", "Key coastal Pinellas station exposed directly to Old Tampa Bay marine breezes and tropical storm surge threats.",
+  "KSPG", "Albert Whitted Airport", "Pinellas", 27.7651, -82.6270, 7, "ASOS", "Downtown St. Petersburg waterfront station; its low 7-foot elevation makes it critical for measuring bay water rise.",
+  "KMCF", "MacDill Air Force Base", "Hillsborough", 27.8494, -82.5211, 14, "Military Aerodrome", "Located at the tip of the South Tampa peninsula between Hillsborough Bay and Old Tampa Bay.",
+  "KVDF", "Tampa Executive Airport", "East Hillsborough", 28.0142, -82.3453, 22, "AWOS-3", "Inland Hillsborough station northeast of downtown Tampa; captures continental temperature swings away from water.",
+  "KLAL", "Lakeland Linder International", "Polk", 27.9889, -82.0186, 142, "ASOS", "Inland station east of Tampa Bay and home base to the world-renowned NOAA Hurricane Hunters flight operations.",
+  "KBKV", "Brooksville-Tampa Bay Regional", "Hernando", 28.4736, -82.4553, 77, "AWOS-3", "Northern perimeter station representing the Nature Coast boundary of the greater Tampa Bay region.",
+  "KSRQ", "Sarasota Bradenton International", "Manatee / Sarasota", 27.3956, -82.5544, 30, "Primary ASOS", "Southern gateway station near the landfall impact zone of Hurricane Milton (2024)."
+)
+
+station_obs <- map(stations_raw$id, get_station_obs) |> list_rbind()
+
+stations <- stations_raw |>
+  left_join(station_obs, by = "id") |>
+  mutate(
+    marker_color = if_else(id == "KTPA", "#dc2626", "#2563eb"),
+    fill_color   = if_else(id == "KTPA", "#ef4444", "#3b82f6"),
+    radius_val   = if_else(id == "KTPA", 11, 8),
+    live_snippet = paste0(
+      "<div style=\"background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px; margin-top:8px;\">",
+      "<span style=\"color:", if_else(id == "KTPA", "#dc2626", "#2563eb"), "; font-weight:700; font-size:11px;\">● LIVE STATION TELEMETRY</span><br>",
+      "<b>Temp:</b> ", live_temp, " | <b>Dew:</b> ", live_dew, "<br>",
+      "<b>Pressure:</b> ", live_press, " | <b>Wind:</b> ", live_wind, "<br>",
+      "<b>Condition:</b> ", live_cond,
+      "</div>"
+    )
+  )
+
+leaflet(stations, height = 500) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~lon, lat = ~lat,
+    radius = ~radius_val,
+    color = ~marker_color,
+    fillColor = ~fill_color,
+    fillOpacity = 0.85,
+    weight = 2,
+    label = ~paste0(id, " — ", name, " (", live_temp, ", ", live_cond, ")"),
+    popup = ~paste0(
+      "<div style=\"min-width:240px; font-family: system-ui, sans-serif;\">",
+      "<h4 style=\"margin:0 0 6px 0; color:#1e3a8a; font-size:15px;\"><b>", id, "</b> — ", name, "</h4>",
+      "<b>Network Type:</b> ", type, "<br>",
+      "<b>County:</b> ", county, "<br>",
+      "<b>Elevation:</b> ", elev_ft, " ft<br>",
+      "<b>Coordinates:</b> ", lat, "° N, ", abs(lon), "° W<br>",
+      "<hr style=\"margin:8px 0; border:0; border-top:1px solid #cbd5e1;\">",
+      "<p style=\"margin:0 0 4px 0; font-size:12.5px; color:#334155; line-height:1.4;\">", description, "</p>",
+      live_snippet,
+      "</div>"
+    )
+  )
 ```

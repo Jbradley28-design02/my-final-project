@@ -520,7 +520,28 @@ Click or hover on any station to view its elevation, telemetry type, and role in
 
 ```{r}
 #| label: weather-station-map
-stations <- tribble(
+get_station_obs <- function(station_id) {
+  tryCatch({
+    url <- paste0("https://api.weather.gov/stations/", station_id, "/observations/latest")
+    req <- fromJSON(url)
+    p <- req$properties
+    tibble(
+      id = station_id,
+      live_temp = if (!is.null(p$temperature$value) && !is.na(p$temperature$value)) paste0(round(p$temperature$value * 9/5 + 32, 1), "°F") else "N/A",
+      live_dew = if (!is.null(p$dewpoint$value) && !is.na(p$dewpoint$value)) paste0(round(p$dewpoint$value * 9/5 + 32, 1), "°F") else "N/A",
+      live_press = if (!is.null(p$barometricPressure$value) && !is.na(p$barometricPressure$value)) paste0(round(p$barometricPressure$value / 3386.39, 2), " inHg") else "N/A",
+      live_wind = if (!is.null(p$windSpeed$value) && !is.na(p$windSpeed$value)) {
+        w <- round(p$windSpeed$value * 0.621371, 1)
+        if (w == 0) "Calm" else paste0(w, " mph")
+      } else "N/A",
+      live_cond = if (!is.null(p$textDescription) && nzchar(p$textDescription)) p$textDescription else "Observed"
+    )
+  }, error = \(e) {
+    tibble(id = station_id, live_temp = "N/A", live_dew = "N/A", live_press = "N/A", live_wind = "N/A", live_cond = "Offline")
+  })
+}
+
+stations_raw <- tribble(
   ~id, ~name, ~county, ~lat, ~lon, ~elev_ft, ~type, ~description,
   "KTPA", "Tampa International Airport", "Hillsborough", 27.9755, -82.5332, 19, "Primary ASOS (Study Anchor)", "Central anchor station for this 10-year investigation. Recorded the 98.0°F record high and 16.14-inch Debby deluge.",
   "KPIE", "St. Pete–Clearwater International", "Pinellas", 27.9108, -82.6874, 11, "Primary ASOS", "Key coastal Pinellas station exposed directly to Old Tampa Bay marine breezes and tropical storm surge threats.",
@@ -530,22 +551,23 @@ stations <- tribble(
   "KLAL", "Lakeland Linder International", "Polk", 27.9889, -82.0186, 142, "ASOS", "Inland station east of Tampa Bay and home base to the world-renowned NOAA Hurricane Hunters flight operations.",
   "KBKV", "Brooksville-Tampa Bay Regional", "Hernando", 28.4736, -82.4553, 77, "AWOS-3", "Northern perimeter station representing the Nature Coast boundary of the greater Tampa Bay region.",
   "KSRQ", "Sarasota Bradenton International", "Manatee / Sarasota", 27.3956, -82.5544, 30, "Primary ASOS", "Southern gateway station near the landfall impact zone of Hurricane Milton (2024)."
-) |>
+)
+
+station_obs <- map(stations_raw$id, get_station_obs) |> list_rbind()
+
+stations <- stations_raw |>
+  left_join(station_obs, by = "id") |>
   mutate(
     marker_color = if_else(id == "KTPA", "#dc2626", "#2563eb"),
     fill_color   = if_else(id == "KTPA", "#ef4444", "#3b82f6"),
     radius_val   = if_else(id == "KTPA", 11, 8),
-    live_snippet = if_else(
-      id == "KTPA",
-      paste0(
-        "<div style=\"background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px; margin-top:8px;\">",
-        "<span style=\"color:#dc2626; font-weight:700; font-size:11px;\">● LIVE TELEMETRY FEED</span><br>",
-        "<b>Temp:</b> ", live_init$temp, " | <b>Dew:</b> ", live_init$dew, "<br>",
-        "<b>Pressure:</b> ", live_init$press, " | <b>Wind:</b> ", live_init$wind, "<br>",
-        "<b>Condition:</b> ", live_init$condition,
-        "</div>"
-      ),
-      ""
+    live_snippet = paste0(
+      "<div style=\"background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px; margin-top:8px;\">",
+      "<span style=\"color:", if_else(id == "KTPA", "#dc2626", "#2563eb"), "; font-weight:700; font-size:11px;\">● LIVE STATION TELEMETRY</span><br>",
+      "<b>Temp:</b> ", live_temp, " | <b>Dew:</b> ", live_dew, "<br>",
+      "<b>Pressure:</b> ", live_press, " | <b>Wind:</b> ", live_wind, "<br>",
+      "<b>Condition:</b> ", live_cond,
+      "</div>"
     )
   )
 
@@ -558,16 +580,16 @@ leaflet(stations, height = 500) |>
     fillColor = ~fill_color,
     fillOpacity = 0.85,
     weight = 2,
-    label = ~paste0(id, " — ", name),
+    label = ~paste0(id, " — ", name, " (", live_temp, ", ", live_cond, ")"),
     popup = ~paste0(
-      "<div style=\"min-width:230px; font-family: system-ui, sans-serif;\">",
+      "<div style=\"min-width:240px; font-family: system-ui, sans-serif;\">",
       "<h4 style=\"margin:0 0 6px 0; color:#1e3a8a; font-size:15px;\"><b>", id, "</b> — ", name, "</h4>",
       "<b>Network Type:</b> ", type, "<br>",
       "<b>County:</b> ", county, "<br>",
       "<b>Elevation:</b> ", elev_ft, " ft<br>",
       "<b>Coordinates:</b> ", lat, "° N, ", abs(lon), "° W<br>",
       "<hr style=\"margin:8px 0; border:0; border-top:1px solid #cbd5e1;\">",
-      "<p style=\"margin:0; font-size:12.5px; color:#334155; line-height:1.4;\">", description, "</p>",
+      "<p style=\"margin:0 0 4px 0; font-size:12.5px; color:#334155; line-height:1.4;\">", description, "</p>",
       live_snippet,
       "</div>"
     )

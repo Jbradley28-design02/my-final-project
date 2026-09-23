@@ -63,8 +63,48 @@ async function fetchLiveKTPAWeather() {
   }
 }
 
+function initLiveCardScrollAnimation() {
+  const cards = document.querySelectorAll(".live-card");
+  if (!cards.length) return;
+
+  function triggerCard(card, index) {
+    if (card.classList.contains("popped")) return;
+    card.style.animationDelay = (index * 0.08) + "s";
+    card.classList.add("popped");
+
+    card.addEventListener("animationend", function () {
+      card.style.opacity = "1";
+      card.style.transform = "none";
+      card.style.animation = "none";
+    }, { once: true });
+  }
+
+  function checkCards() {
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    cards.forEach(function (card, index) {
+      if (card.classList.contains("popped")) return;
+      const rect = card.getBoundingClientRect();
+      // Only reveal once the entire box (including its bottom line) is within the screen
+      if ((rect.bottom <= windowHeight && rect.top >= 0) || rect.bottom < 0) {
+        triggerCard(card, index);
+      }
+    });
+  }
+
+  window.addEventListener("scroll", checkCards, { passive: true });
+  window.addEventListener("resize", checkCards);
+
+  // Initial checks
+  checkCards();
+  setTimeout(checkCards, 60);
+  setTimeout(checkCards, 250);
+  setTimeout(checkCards, 600);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   fetchLiveKTPAWeather();
+  initLiveCardScrollAnimation();
   // Automatically poll every 3 minutes
   setInterval(fetchLiveKTPAWeather, 180000);
 });
+

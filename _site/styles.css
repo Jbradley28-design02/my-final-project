@@ -351,6 +351,16 @@ body {
   letter-spacing: 0.5px;
 }
 
+.live-card-sub {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  margin-top: 0.4rem;
+  line-height: 1.35;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .live-refresh-btn {
   background: #334155;
   color: #f1f5f9;

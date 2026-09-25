@@ -686,26 +686,31 @@ Live observations streamed directly from the National Weather Service automated 
       <div class="live-card-icon">🌡️</div>
       <div id="live-temp-val" class="live-card-val">--.-°F</div>
       <div class="live-card-label">Live Temperature</div>
+      <div class="live-card-sub">Measures ambient air warmth in the shade.</div>
     </div>
     <div class="live-card">
       <div class="live-card-icon">💧</div>
       <div id="live-dew-val" class="live-card-val">--.-°F</div>
       <div class="live-card-label">Live Dew Point</div>
+      <div class="live-card-sub">Measures air moisture; higher values feel muggy.</div>
     </div>
     <div class="live-card">
       <div class="live-card-icon">🌪️</div>
       <div id="live-press-val" class="live-card-val">--.-- inHg</div>
       <div class="live-card-label">Live Pressure</div>
+      <div class="live-card-sub">Barometric weight; falling pressure signals storms.</div>
     </div>
     <div class="live-card">
       <div class="live-card-icon">💨</div>
       <div id="live-wind-val" class="live-card-val">-- mph</div>
       <div class="live-card-label">Live Wind Speed</div>
+      <div class="live-card-sub">Sustained horizontal airflow across airport runways.</div>
     </div>
     <div class="live-card">
       <div class="live-card-icon">🌧️</div>
       <div id="live-precip-val" class="live-card-val">-- in</div>
       <div class="live-card-label">Live Rain (1-Hr)</div>
+      <div class="live-card-sub">Liquid rainfall accumulated over the past 60 minutes.</div>
     </div>
   </div>
 </div>

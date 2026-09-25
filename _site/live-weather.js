@@ -177,9 +177,201 @@ function initLiveCardScrollAnimation() {
   setTimeout(checkCards, 600);
 }
 
+// Interactive Plotly graphs scroll-driven line drawing and marker pop-up animations
+function initPlotlyScrollAnimations() {
+  const chartContainers = document.querySelectorAll(".plotly.html-widget, #ktpa-2025-live-chart");
+  if (!chartContainers.length) return;
+
+  function isElementInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    return (rect.top <= windowHeight * 0.85 && rect.bottom >= 0);
+  }
+
+  chartContainers.forEach(function (container) {
+    if (container.dataset.graphObserverAttached) return;
+    container.dataset.graphObserverAttached = "true";
+
+    // If below viewport, mark pending to prevent flashing
+    if (!isElementInViewport(container)) {
+      container.classList.add("plotly-scroll-pending");
+    }
+
+    function animateChart() {
+      if (container.dataset.graphAnimated) return;
+
+      const linePaths = container.querySelectorAll(".scatterlayer .lines path.js-line");
+      if (!linePaths.length) return;
+
+      container.dataset.graphAnimated = "true";
+      container.classList.remove("plotly-scroll-pending");
+
+      const points = container.querySelectorAll(".scatterlayer .points path.point");
+      const annotations = container.querySelectorAll(".infolayer .annotation");
+      const shapes = container.querySelectorAll(".shapelayer path");
+
+      // 1. Initially hide points, stars, annotations, and vertical guideline shapes
+      points.forEach(function (p) {
+        p.style.opacity = "0";
+        p.style.transform = "scale(0)";
+        p.style.transformBox = "fill-box";
+        p.style.transformOrigin = "center";
+        p.style.transition = "none";
+      });
+
+      annotations.forEach(function (a) {
+        a.style.opacity = "0";
+        a.style.transform = "scale(0.2)";
+        a.style.transformBox = "fill-box";
+        a.style.transformOrigin = "center";
+        a.style.transition = "none";
+      });
+
+      shapes.forEach(function (s) {
+        s.style.opacity = "0";
+        s.style.transition = "none";
+      });
+
+      // 2. Animate the line drawing across the chart
+      linePaths.forEach(function (path) {
+        let length = 25000;
+        try {
+          const l = path.getTotalLength();
+          if (l && l > 100) length = Math.ceil(l) + 150;
+        } catch (e) {}
+
+        path.style.opacity = "1";
+        path.style.transition = "none";
+        path.style.strokeDasharray = length + " " + length;
+        path.style.strokeDashoffset = length;
+
+        // Force browser layout reflow
+        path.getBoundingClientRect();
+
+        // Smooth line draw animation
+        path.style.transition = "stroke-dashoffset 1.7s cubic-bezier(0.25, 1, 0.45, 1)";
+        path.style.strokeDashoffset = "0";
+      });
+
+      // 3. Right as the line finishes drawing (~1.65s), pop up red disaster points & stars!
+      setTimeout(function () {
+        // Fade in guideline shapes
+        shapes.forEach(function (s) {
+          s.style.transition = "opacity 0.4s ease";
+          s.style.opacity = "1";
+        });
+
+        // Pop up the red points and stars with a bouncy spring curve, staggered
+        points.forEach(function (p, idx) {
+          setTimeout(function () {
+            p.style.transition = "opacity 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            p.style.opacity = "1";
+            p.style.transform = "scale(1)";
+          }, idx * 40);
+        });
+
+        // Pop up information annotations right after
+        annotations.forEach(function (a, idx) {
+          setTimeout(function () {
+            a.style.transition = "opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            a.style.opacity = "1";
+            a.style.transform = "scale(1)";
+          }, 100 + (idx * 50));
+        });
+
+        // 4. Clean up inline styles after the animation finishes (~3.2s)
+        // This ensures native range slider, pan, zoom, hover tooltips are 100% responsive.
+        setTimeout(function () {
+          linePaths.forEach(function (path) {
+            path.style.strokeDasharray = "";
+            path.style.strokeDashoffset = "";
+            path.style.transition = "";
+          });
+          points.forEach(function (p) {
+            p.style.opacity = "";
+            p.style.transform = "";
+            p.style.transformBox = "";
+            p.style.transformOrigin = "";
+            p.style.transition = "";
+          });
+          annotations.forEach(function (a) {
+            a.style.opacity = "";
+            a.style.transform = "";
+            a.style.transformBox = "";
+            a.style.transformOrigin = "";
+            a.style.transition = "";
+          });
+          shapes.forEach(function (s) {
+            s.style.opacity = "";
+            s.style.transition = "";
+          });
+        }, 1800);
+
+      }, 1650);
+    }
+
+    // Set up observer for scrolling down to this graph
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          if (container.querySelectorAll(".scatterlayer .lines path.js-line").length) {
+            animateChart();
+            observer.unobserve(container);
+          } else {
+            // If Plotly is still rendering the widget, poll until lines exist
+            const poll = setInterval(function () {
+              if (container.querySelectorAll(".scatterlayer .lines path.js-line").length) {
+                clearInterval(poll);
+                animateChart();
+                observer.unobserve(container);
+              }
+            }, 70);
+            setTimeout(function () { clearInterval(poll); }, 6000);
+          }
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: "0px 0px -40px 0px"
+    });
+
+    observer.observe(container);
+  });
+}
+
+// Story page figure scroll-in animation
+function initStoryFigureAnimation() {
+  const figures = document.querySelectorAll("figure img, .cell-output-display img");
+  if (!figures.length) return;
+  figures.forEach(function (img) {
+    img.style.opacity = "0";
+    img.style.transform = "translateY(24px) scale(0.98)";
+    img.style.transition = "opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
+
+    const obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          img.style.opacity = "1";
+          img.style.transform = "translateY(0) scale(1)";
+          obs.unobserve(img);
+        }
+      });
+    }, { threshold: 0.15 });
+    obs.observe(img);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   fetchLiveKTPAWeather();
   initLiveCardScrollAnimation();
+  initPlotlyScrollAnimations();
+  initStoryFigureAnimation();
+
+  // Retry attaching to Plotly widgets as HTMLWidgets initializes them
+  setTimeout(initPlotlyScrollAnimations, 300);
+  setTimeout(initPlotlyScrollAnimations, 800);
+  setTimeout(initPlotlyScrollAnimations, 1500);
+
   // Automatically poll every 3 minutes
   setInterval(fetchLiveKTPAWeather, 180000);
   // Initial sync attempt after 1.5s to let Plotly widget render

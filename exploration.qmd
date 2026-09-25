@@ -714,8 +714,6 @@ Live observations streamed directly from the National Weather Service automated 
     </div>
   </div>
 </div>
-
-<script src="live-weather.js"></script>
 ```
 
 ### 3.1 Continuous KTPA Telemetry & Trend Stream (2025 – Present)

@@ -17,3 +17,7 @@ website:
 format:
   html:
     theme: cosmo
+    css: styles.css
+    include-after-body:
+      - text: |
+          <script src="live-weather.js"></script>

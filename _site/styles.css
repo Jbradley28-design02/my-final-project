@@ -378,4 +378,29 @@ body {
   border-color: #64748b;
 }
 
+/* ==========================================================================
+   Interactive Graph Scroll & Pop-in Animations
+   ========================================================================== */
+
+/* Hardware acceleration for SVG chart layers */
+.plotly .scatterlayer path.js-line {
+  will-change: stroke-dashoffset;
+}
+
+.plotly .scatterlayer path.point,
+.plotly .infolayer .annotation {
+  will-change: transform, opacity;
+}
+
+/* Pending initial scroll-in */
+.plotly-scroll-pending .scatterlayer .lines path.js-line {
+  opacity: 0;
+}
+
+.plotly-scroll-pending .scatterlayer .points path.point,
+.plotly-scroll-pending .infolayer .annotation,
+.plotly-scroll-pending .shapelayer path {
+  opacity: 0;
+}
+
 

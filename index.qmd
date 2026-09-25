@@ -87,8 +87,6 @@ Live observations streamed directly from the National Weather Service automated 
     </div>
   </div>
 </div>
-
-<script src="live-weather.js"></script>
 ```
 
 ## Tampa Bay Regional Weather Station Network

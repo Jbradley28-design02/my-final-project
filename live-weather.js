@@ -253,34 +253,61 @@ function initPlotlyScrollAnimations() {
         path.style.strokeDashoffset = "0";
       });
 
-      // 3. Right as the line finishes drawing (~1.65s), pop up red disaster points & stars!
+      // 3. Right as the line finishes drawing (~1.65s), pop up red disaster points & stars from oldest to youngest!
       setTimeout(function () {
-        // Fade in guideline shapes
-        shapes.forEach(function (s) {
-          s.style.transition = "opacity 0.4s ease";
-          s.style.opacity = "1";
+        // Collect and sort points strictly from oldest to youngest (left to right along the chronological X-axis)
+        const pointsArr = Array.from(points);
+        pointsArr.sort(function (a, b) {
+          const rectA = a.getBoundingClientRect();
+          const rectB = b.getBoundingClientRect();
+          return rectA.left - rectB.left;
         });
 
-        // Pop up the red points and stars with a bouncy spring curve, staggered
-        points.forEach(function (p, idx) {
+        // Collect and sort annotations strictly from oldest to youngest
+        const annotationsArr = Array.from(annotations);
+        annotationsArr.sort(function (a, b) {
+          const rectA = a.getBoundingClientRect();
+          const rectB = b.getBoundingClientRect();
+          return rectA.left - rectB.left;
+        });
+
+        // Collect and sort vertical disaster shapes
+        const shapesArr = Array.from(shapes);
+        shapesArr.sort(function (a, b) {
+          const rectA = a.getBoundingClientRect();
+          const rectB = b.getBoundingClientRect();
+          return rectA.left - rectB.left;
+        });
+
+        // Smooth chronological pop-up for vertical guide lines
+        shapesArr.forEach(function (s, idx) {
           setTimeout(function () {
-            p.style.transition = "opacity 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            s.style.transition = "opacity 0.45s ease";
+            s.style.opacity = "1";
+          }, idx * 65);
+        });
+
+        // Buttery-smooth spring pop-up for red points and stars (oldest -> youngest)
+        pointsArr.forEach(function (p, idx) {
+          setTimeout(function () {
+            p.style.transition = "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.34, 1.45, 0.64, 1)";
             p.style.opacity = "1";
             p.style.transform = "scale(1)";
-          }, idx * 40);
+          }, idx * 65);
         });
 
-        // Pop up information annotations right after
-        annotations.forEach(function (a, idx) {
+        // Smooth pop-up for informational annotations matching each event
+        annotationsArr.forEach(function (a, idx) {
           setTimeout(function () {
-            a.style.transition = "opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            a.style.transition = "opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.34, 1.35, 0.64, 1)";
             a.style.opacity = "1";
             a.style.transform = "scale(1)";
-          }, 100 + (idx * 50));
+          }, 90 + (idx * 65));
         });
 
-        // 4. Clean up inline styles after the animation finishes (~3.2s)
+        // 4. Clean up inline styles after the animation finishes
         // This ensures native range slider, pan, zoom, hover tooltips are 100% responsive.
+        const totalDuration = Math.max(pointsArr.length, annotationsArr.length) * 65 + 1000;
         setTimeout(function () {
           linePaths.forEach(function (path) {
             path.style.strokeDasharray = "";
@@ -305,7 +332,7 @@ function initPlotlyScrollAnimations() {
             s.style.opacity = "";
             s.style.transition = "";
           });
-        }, 1800);
+        }, totalDuration);
 
       }, 1650);
     }

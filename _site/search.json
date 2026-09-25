@@ -35,13 +35,6 @@
     "text": "The Spark: A Lifelong Fascination with Weather\nEver since I was little, my parents would constantly find me sitting in front of the TV, completely captivated by weather reports. While other kids were watching cartoons, I was drawn to the radar loops, the satellite views, and the meteorologists tracking cold fronts, squall lines, and tropical systems.\nThat fascination naturally followed me into the classroom. Throughout science classes in late elementary and early middle school, I was always asking why—trying to understand what drove high and low pressure, what created thunderstorms, and how the atmosphere operated. Outside of class, I dove into independent research and study, reading whatever I could find about atmospheric science and meteorology.\nWhen the opportunity came to build this final project, choosing Tampa Bay’s weather was a natural extension of a lifelong passion that started in my childhood living room."
   },
   {
-    "objectID": "about.html#the-vision-blending-exploration-and-storytelling",
-    "href": "about.html#the-vision-blending-exploration-and-storytelling",
-    "title": "About the Project & Author",
-    "section": "The Vision: Blending Exploration and Storytelling",
-    "text": "The Vision: Blending Exploration and Storytelling\nA central goal of this project was to make sure it wasn’t just raw data on one hand or pure narrative on the other. Instead, it bridges the two:\n\n\n\nInteractive Exploration\n\n\nInvestigating over 100,000+ hourly observations across a full decade (2015–2024) at Tampa International Airport (KTPA). Here, you can interact with multi-year temperature trends, dew point comfort zones, pressure distributions, and all-time station records.\n\n\n\n\nAtmospheric Storytelling\n\n\nWeather is also a lived experience. In the story section, we zoom in to minute-by-minute and hourly telemetry during major tropical events—like Hurricane Irma’s eye passage in 2017—unraveling the physical drama of barometric collapse and extreme gale winds.\n\n\n\nBy combining both perspectives: - Exploration provides the empirical baseline: what is normal for Tampa Bay, what are the seasonal rhythms, and how rare are extreme events? - Story brings the human and physical reality into focus: what does it actually feel like when a Category 4 or 5 cyclone churns up the Florida peninsula?\nTogether, they turn cold meteorological telemetry into a living, interactive analysis."
-  },
-  {
     "objectID": "about.html#data-methods",
     "href": "about.html#data-methods",
     "title": "About the Project & Author",
@@ -74,7 +67,7 @@
     "href": "exploration.html#real-time-telemetry-feed-ktpa",
     "title": "Interactive Weather Explorer",
     "section": "3. Real-Time Telemetry Feed (KTPA)",
-    "text": "3. Real-Time Telemetry Feed (KTPA)\nLive observations streamed directly from the National Weather Service automated sensor network at Tampa International Airport.\n\n  \n    \n       LIVE NWS BROADCAST\n      KTPA — Tampa International Airport Telemetry\n      Observed Live\n    \n    \n      Loading...\n      🔄 Refresh\n    \n  \n\n  \n    \n      🌡️\n      --.-°F\n      Live Temperature\n    \n    \n      💧\n      --.-°F\n      Live Dew Point\n    \n    \n      🌪️\n      --.-- inHg\n      Live Pressure\n    \n    \n      💨\n      -- mph\n      Live Wind Speed\n    \n    \n      🌧️\n      -- in\n      Live Rain (1-Hr)"
+    "text": "3. Real-Time Telemetry Feed (KTPA)\nLive observations streamed directly from the National Weather Service automated sensor network at Tampa International Airport.\n\n  \n    \n       LIVE NWS BROADCAST\n      KTPA — Tampa International Airport Telemetry\n      Observed Live\n    \n    \n      Loading...\n      🔄 Refresh\n    \n  \n\n  \n    \n      🌡️\n      --.-°F\n      Live Temperature\n    \n    \n      💧\n      --.-°F\n      Live Dew Point\n    \n    \n      🌪️\n      --.-- inHg\n      Live Pressure\n    \n    \n      💨\n      -- mph\n      Live Wind Speed\n    \n    \n      🌧️\n      -- in\n      Live Rain (1-Hr)\n    \n  \n\n\n\n\n3.1 Continuous KTPA Telemetry & Trend Stream (2025 – Present)\nThis unified graph tracks all 5 meteorological measurements for KTPA from January 1, 2025 to the present. Use the dropdown menu below to switch between measurements, and the range selector (24h, 7d, 1m, 6m, 1y, All) or bottom slider to zoom into any time window."
   },
   {
     "objectID": "story.html",

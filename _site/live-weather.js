@@ -56,10 +56,86 @@ async function fetchLiveKTPAWeather() {
     const timeEl = document.getElementById("live-time-str");
     if (timeEl) timeEl.textContent = "Observed at " + timeFormatted;
 
+    // Also trigger syncing the 2025-present chart with newest telemetry
+    syncChartWithLatestTelemetry();
+
   } catch (error) {
     console.warn("Could not retrieve live NWS telemetry:", error);
   } finally {
     if (refreshBtn) refreshBtn.textContent = "🔄 Refresh";
+  }
+}
+
+// Synchronize latest NWS observations with the KTPA 2025-present chart
+async function syncChartWithLatestTelemetry() {
+  const chartDiv = document.getElementById("ktpa-2025-live-chart");
+  if (!chartDiv || !window.Plotly || !chartDiv.data || chartDiv.data.length < 5) return;
+
+  try {
+    const resp = await fetch("https://api.weather.gov/stations/KTPA/observations?limit=48", {
+      headers: { "Accept": "application/geo+json" }
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const features = data.features || [];
+    if (!features.length) return;
+
+    const sorted = features.slice().reverse();
+    const existingDates = chartDiv.data[0].x || [];
+    const lastDateStr = existingDates.length > 0 ? existingDates[existingDates.length - 1] : null;
+    const lastTime = lastDateStr ? new Date(lastDateStr).getTime() : 0;
+
+    const newX = [[], [], [], [], []];
+    const newY = [[], [], [], [], []];
+    const newText = [[], [], [], [], []];
+
+    for (const f of sorted) {
+      const p = f.properties;
+      if (!p || !p.timestamp) continue;
+      const obsTime = new Date(p.timestamp).getTime();
+      if (obsTime <= lastTime) continue;
+
+      const iso = p.timestamp;
+      const timeFmt = new Date(iso).toLocaleString("en-US", {
+        month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+      });
+
+      const tempF = p.temperature && p.temperature.value !== null ? parseFloat((p.temperature.value * 9/5 + 32).toFixed(1)) : null;
+      const dewF = p.dewpoint && p.dewpoint.value !== null ? parseFloat((p.dewpoint.value * 9/5 + 32).toFixed(1)) : null;
+      const pressInHg = p.barometricPressure && p.barometricPressure.value !== null ? parseFloat((p.barometricPressure.value / 3386.39).toFixed(2)) : null;
+      const windMph = p.windSpeed && p.windSpeed.value !== null ? parseFloat((p.windSpeed.value * 0.621371).toFixed(1)) : null;
+      const precipIn = p.precipitationLastHour && p.precipitationLastHour.value !== null ? parseFloat((p.precipitationLastHour.value * 39.3701).toFixed(2)) : 0.00;
+
+      newX[0].push(iso);
+      newY[0].push(tempF);
+      newText[0].push(`<b style="font-size:13px; color:#c2410c;">🌡️ Temperature (Live)</b><br><b>Time:</b> ${timeFmt}<br><b>Reading:</b> ${tempF} °F`);
+
+      newX[1].push(iso);
+      newY[1].push(dewF);
+      newText[1].push(`<b style="font-size:13px; color:#047857;">💧 Dew Point (Live)</b><br><b>Time:</b> ${timeFmt}<br><b>Reading:</b> ${dewF} °F`);
+
+      newX[2].push(iso);
+      newY[2].push(pressInHg);
+      newText[2].push(`<b style="font-size:13px; color:#1d4ed8;">🌪️ Barometric Pressure (Live)</b><br><b>Time:</b> ${timeFmt}<br><b>Reading:</b> ${pressInHg} inHg`);
+
+      newX[3].push(iso);
+      newY[3].push(windMph);
+      newText[3].push(`<b style="font-size:13px; color:#7e22ce;">💨 Sustained Wind Speed (Live)</b><br><b>Time:</b> ${timeFmt}<br><b>Reading:</b> ${windMph} mph`);
+
+      newX[4].push(iso);
+      newY[4].push(precipIn);
+      newText[4].push(`<b style="font-size:13px; color:#0284c7;">🌧️ Precipitation (Live)</b><br><b>Time:</b> ${timeFmt}<br><b>Reading:</b> ${precipIn} in`);
+    }
+
+    if (newX[0].length > 0) {
+      window.Plotly.extendTraces(chartDiv, {
+        x: newX,
+        y: newY,
+        text: newText
+      }, [0, 1, 2, 3, 4]);
+    }
+  } catch (err) {
+    console.warn("Could not sync live observations with chart:", err);
   }
 }
 
@@ -106,5 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initLiveCardScrollAnimation();
   // Automatically poll every 3 minutes
   setInterval(fetchLiveKTPAWeather, 180000);
+  // Initial sync attempt after 1.5s to let Plotly widget render
+  setTimeout(syncChartWithLatestTelemetry, 1500);
 });
 

@@ -178,24 +178,21 @@ ann_precip <- list(
 
 ## 1. 10-Year Weather Telemetry & Extremes Explorer (2015–2024)
 
-Use the **pull-down menu** in the top-left of the chart to select any meteorological measurement (**Temperature**, **Dew Point**, **Barometric Pressure**, **Wind Speed**, or **Precipitation**). 
+Explore each of the five meteorological measurements across the full 10-year record (2015–2024). Each measurement has its own dedicated interactive graph below with:
 
-- **Hover over any data point** for high-contrast, crystal-clear readings.
-- **Gold Star Markers (⭐)** highlight the **highest rating / record extreme** across the entire 10-year period.
-- **Red Diamond Markers (♦)** and dashed vertical lines identify the 9 major hurricanes and tropical disasters.
-- **Range Slider**: Drag the bottom bar or click **1m / 6m / 1y / 5y / All** to zoom in on any period.
+- **Gold Star Markers (⭐)**: Highlight all-time 10-year records and extremes.
+- **Red Diamond Markers (♦)** and dashed vertical lines: Identify the 9 major hurricanes and tropical disasters.
+- **Interactive Range Slider**: Drag the bottom bar or click **1m / 6m / 1y / 5y / All** to zoom in on any period.
+- **Hover Readings**: Hover over any point for high-contrast, crystal-clear observations.
+
+### 1.1 Temperature Record (°F)
 
 ```{r}
-#| label: unified-weather-explorer
-# 15 Traces: 3 for each measurement (Main Line, Disaster Markers, Record Peak Star)
+#| label: fig-temp-explorer
 plot_ly() |>
-  # ==========================================
-  # 1. TEMPERATURE TRACES (1, 2, 3)
-  # ==========================================
   add_lines(
     data = daily_weather, x = ~date, y = ~temp_avg,
     name = "Daily Avg Temp (°F)",
-    visible = TRUE,
     line = list(color = "#D84315", width = 1.3),
     hoverinfo = "text",
     text = ~paste0(
@@ -208,7 +205,6 @@ plot_ly() |>
   add_markers(
     data = disaster_pts, x = ~date, y = ~temp_avg,
     name = "Disaster Event",
-    visible = TRUE,
     marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
     hoverinfo = "text",
     text = ~paste0(
@@ -221,7 +217,6 @@ plot_ly() |>
   add_markers(
     data = rec_temp, x = ~date, y = ~val,
     name = "10-Year Record Extreme",
-    visible = TRUE,
     marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
     hoverinfo = "text",
     text = ~paste0(
@@ -230,183 +225,10 @@ plot_ly() |>
       "<i>", peak_desc, "</i>"
     )
   ) |>
-
-  # ==========================================
-  # 2. DEW POINT TRACES (4, 5, 6)
-  # ==========================================
-  add_lines(
-    data = daily_weather, x = ~date, y = ~dew_point_avg,
-    name = "Avg Dew Point (°F)",
-    visible = FALSE,
-    line = list(color = "#00695C", width = 1.3),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#047857;\">💧 Dew Point Moisture</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Avg Dew Point:</b> ", dew_point_avg, " °F<br>",
-      "<span style=\"color:#64748b; font-size:12px;\">Dew point > 75°F indicates extreme tropical mugginess</span>"
-    )
-  ) |>
-  add_markers(
-    data = disaster_pts, x = ~date, y = ~dew_point_avg,
-    name = "Disaster Event",
-    visible = FALSE,
-    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Dew Point:</b> ", dew_point_avg, " °F<br>",
-      "<i>", storm_desc, "</i>"
-    )
-  ) |>
-  add_markers(
-    data = rec_dew, x = ~date, y = ~val,
-    name = "10-Year Record Extreme",
-    visible = FALSE,
-    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<i>", peak_desc, "</i>"
-    )
-  ) |>
-
-  # ==========================================
-  # 3. BAROMETRIC PRESSURE TRACES (7, 8, 9)
-  # ==========================================
-  add_lines(
-    data = daily_weather, x = ~date, y = ~pressure_min,
-    name = "Lowest Station Pressure (inHg)",
-    visible = FALSE,
-    line = list(color = "#1565C0", width = 1.3),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#1d4ed8;\">🌪️ Barometric Pressure</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Minimum Pressure:</b> ", pressure_min, " inHg<br>",
-      "<b>Daily Average:</b> ", pressure_avg, " inHg<br>",
-      "<span style=\"color:#64748b; font-size:12px;\">Standard baseline: ~30.00 to 30.20 inHg</span>"
-    )
-  ) |>
-  add_markers(
-    data = disaster_pts, x = ~date, y = ~pressure_min,
-    name = "Disaster Event",
-    visible = FALSE,
-    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Lowest Pressure:</b> ", pressure_min, " inHg<br>",
-      "<i>", storm_desc, "</i>"
-    )
-  ) |>
-  add_markers(
-    data = rec_press, x = ~date, y = ~val,
-    name = "10-Year Record Extreme",
-    visible = FALSE,
-    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<i>", peak_desc, "</i>"
-    )
-  ) |>
-
-  # ==========================================
-  # 4. WIND SPEED TRACES (10, 11, 12)
-  # ==========================================
-  add_lines(
-    data = daily_weather, x = ~date, y = ~wind_max,
-    name = "Max Sustained Wind (mph)",
-    visible = FALSE,
-    line = list(color = "#6A1B9A", width = 1.3),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#7e22ce;\">💨 Wind Velocity</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
-      "<span style=\"color:#64748b; font-size:12px;\">Standard diurnal sea breezes: 5–10 mph</span>"
-    )
-  ) |>
-  add_markers(
-    data = disaster_pts, x = ~date, y = ~wind_max,
-    name = "Disaster Event",
-    visible = FALSE,
-    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
-      "<i>", storm_desc, "</i>"
-    )
-  ) |>
-  add_markers(
-    data = rec_wind, x = ~date, y = ~val,
-    name = "10-Year Record Extreme",
-    visible = FALSE,
-    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<i>", peak_desc, "</i>"
-    )
-  ) |>
-
-  # ==========================================
-  # 5. PRECIPITATION TRACES (13, 14, 15)
-  # ==========================================
-  add_lines(
-    data = daily_weather, x = ~date, y = ~precip_total,
-    name = "Daily Rainfall Total (in)",
-    visible = FALSE,
-    line = list(color = "#0288D1", width = 1.3),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#0284c7;\">🌧️ Hydrological Telemetry</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Daily Rainfall:</b> ", precip_total, " inches<br>",
-      "<span style=\"color:#64748b; font-size:12px;\">Measured at Tampa International Airport gauge</span>"
-    )
-  ) |>
-  add_markers(
-    data = disaster_pts, x = ~date, y = ~precip_total,
-    name = "Disaster Event",
-    visible = FALSE,
-    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<b>Storm Rainfall:</b> ", precip_total, " inches<br>",
-      "<i>", storm_desc, "</i>"
-    )
-  ) |>
-  add_markers(
-    data = rec_precip, x = ~date, y = ~val,
-    name = "10-Year Record Extreme",
-    visible = FALSE,
-    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
-    hoverinfo = "text",
-    text = ~paste0(
-      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
-      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
-      "<i>", peak_desc, "</i>"
-    )
-  ) |>
-
-  # ==========================================
-  # LAYOUT, HOVER CARD STYLING & DROPDOWN MENU
-  # ==========================================
   layout(
     title = list(
-      text = "Tampa International Airport (KTPA) — 10-Year Meteorological Extremes (2015–2024)",
-      font = list(size = 16, color = "#0f172a"),
+      text = "Tampa International Airport (KTPA) — Daily Temperatures (2015–2024)",
+      font = list(size = 15, color = "#0f172a"),
       x = 0
     ),
     hovermode = "closest",
@@ -433,59 +255,304 @@ plot_ly() |>
       )
     ),
     yaxis = list(title = "Temperature (°F)", showgrid = TRUE),
-    margin = list(t = 60, b = 40, l = 55, r = 25),
-    updatemenus = list(
-      list(
-        type = "dropdown",
-        direction = "down",
-        x = 0.0,
-        y = 1.18,
-        xanchor = "left",
-        yanchor = "bottom",
+    margin = list(t = 50, b = 40, l = 55, r = 25)
+  )
+```
+
+### 1.2 Dew Point & Atmospheric Moisture (°F)
+
+```{r}
+#| label: fig-dew-explorer
+plot_ly() |>
+  add_lines(
+    data = daily_weather, x = ~date, y = ~dew_point_avg,
+    name = "Avg Dew Point (°F)",
+    line = list(color = "#00695C", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#047857;\">💧 Dew Point Moisture</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Avg Dew Point:</b> ", dew_point_avg, " °F<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Dew point > 75°F indicates extreme tropical mugginess</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~dew_point_avg,
+    name = "Disaster Event",
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Dew Point:</b> ", dew_point_avg, " °F<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_dew, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = "Tampa International Airport (KTPA) — Dew Point & Atmospheric Moisture (2015–2024)",
+      font = list(size = 15, color = "#0f172a"),
+      x = 0
+    ),
+    hovermode = "closest",
+    hoverlabel = list(
+      bgcolor = "rgba(255, 255, 255, 0.98)",
+      bordercolor = "#475569",
+      font = list(size = 14, family = "system-ui, -apple-system, sans-serif", color = "#0f172a"),
+      align = "left"
+    ),
+    shapes = event_shapes,
+    annotations = ann_dew,
+    xaxis = list(
+      title = "Date",
+      showgrid = TRUE,
+      rangeslider = list(visible = TRUE),
+      rangeselector = list(
         buttons = list(
-          list(
-            method = "update",
-            args = list(
-              list(visible = c(TRUE, TRUE, TRUE, rep(FALSE, 12))),
-              list(yaxis = list(title = "Temperature (°F)", showgrid = TRUE), annotations = ann_temp)
-            ),
-            label = "🌡️ 1. Temperature Record (°F)"
-          ),
-          list(
-            method = "update",
-            args = list(
-              list(visible = c(rep(FALSE, 3), TRUE, TRUE, TRUE, rep(FALSE, 9))),
-              list(yaxis = list(title = "Dew Point (°F)", showgrid = TRUE), annotations = ann_dew)
-            ),
-            label = "💧 2. Dew Point Moisture (°F)"
-          ),
-          list(
-            method = "update",
-            args = list(
-              list(visible = c(rep(FALSE, 6), TRUE, TRUE, TRUE, rep(FALSE, 6))),
-              list(yaxis = list(title = "Barometric Pressure (inHg)", showgrid = TRUE), annotations = ann_press)
-            ),
-            label = "🌪️ 3. Barometric Pressure (inHg)"
-          ),
-          list(
-            method = "update",
-            args = list(
-              list(visible = c(rep(FALSE, 9), TRUE, TRUE, TRUE, rep(FALSE, 3))),
-              list(yaxis = list(title = "Max Sustained Wind (mph)", showgrid = TRUE), annotations = ann_wind)
-            ),
-            label = "💨 4. Anemometer Wind Speeds (mph)"
-          ),
-          list(
-            method = "update",
-            args = list(
-              list(visible = c(rep(FALSE, 12), TRUE, TRUE, TRUE)),
-              list(yaxis = list(title = "Daily Precipitation (inches)", showgrid = TRUE), annotations = ann_precip)
-            ),
-            label = "🌧️ 5. Hydrological Precipitation (in)"
-          )
+          list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+          list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+          list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+          list(count = 5, label = "5y", step = "year", stepmode = "backward"),
+          list(step = "all", label = "All 10 Years")
         )
       )
+    ),
+    yaxis = list(title = "Dew Point (°F)", showgrid = TRUE),
+    margin = list(t = 50, b = 40, l = 55, r = 25)
+  )
+```
+
+### 1.3 Barometric Pressure (inHg)
+
+```{r}
+#| label: fig-pressure-explorer
+plot_ly() |>
+  add_lines(
+    data = daily_weather, x = ~date, y = ~pressure_min,
+    name = "Lowest Station Pressure (inHg)",
+    line = list(color = "#1565C0", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#1d4ed8;\">🌪️ Barometric Pressure</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Minimum Pressure:</b> ", pressure_min, " inHg<br>",
+      "<b>Daily Average:</b> ", pressure_avg, " inHg<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Standard baseline: ~30.00 to 30.20 inHg</span>"
     )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~pressure_min,
+    name = "Disaster Event",
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Lowest Pressure:</b> ", pressure_min, " inHg<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_press, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = "Tampa International Airport (KTPA) — Barometric Pressure (2015–2024)",
+      font = list(size = 15, color = "#0f172a"),
+      x = 0
+    ),
+    hovermode = "closest",
+    hoverlabel = list(
+      bgcolor = "rgba(255, 255, 255, 0.98)",
+      bordercolor = "#475569",
+      font = list(size = 14, family = "system-ui, -apple-system, sans-serif", color = "#0f172a"),
+      align = "left"
+    ),
+    shapes = event_shapes,
+    annotations = ann_press,
+    xaxis = list(
+      title = "Date",
+      showgrid = TRUE,
+      rangeslider = list(visible = TRUE),
+      rangeselector = list(
+        buttons = list(
+          list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+          list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+          list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+          list(count = 5, label = "5y", step = "year", stepmode = "backward"),
+          list(step = "all", label = "All 10 Years")
+        )
+      )
+    ),
+    yaxis = list(title = "Barometric Pressure (inHg)", showgrid = TRUE),
+    margin = list(t = 50, b = 40, l = 55, r = 25)
+  )
+```
+
+### 1.4 Maximum Sustained Wind Speeds (mph)
+
+```{r}
+#| label: fig-wind-explorer
+plot_ly() |>
+  add_lines(
+    data = daily_weather, x = ~date, y = ~wind_max,
+    name = "Max Sustained Wind (mph)",
+    line = list(color = "#6A1B9A", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#7e22ce;\">💨 Wind Velocity</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Standard diurnal sea breezes: 5–10 mph</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~wind_max,
+    name = "Disaster Event",
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Peak Sustained Wind:</b> ", wind_max, " mph<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_wind, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = "Tampa International Airport (KTPA) — Maximum Sustained Wind Speeds (2015–2024)",
+      font = list(size = 15, color = "#0f172a"),
+      x = 0
+    ),
+    hovermode = "closest",
+    hoverlabel = list(
+      bgcolor = "rgba(255, 255, 255, 0.98)",
+      bordercolor = "#475569",
+      font = list(size = 14, family = "system-ui, -apple-system, sans-serif", color = "#0f172a"),
+      align = "left"
+    ),
+    shapes = event_shapes,
+    annotations = ann_wind,
+    xaxis = list(
+      title = "Date",
+      showgrid = TRUE,
+      rangeslider = list(visible = TRUE),
+      rangeselector = list(
+        buttons = list(
+          list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+          list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+          list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+          list(count = 5, label = "5y", step = "year", stepmode = "backward"),
+          list(step = "all", label = "All 10 Years")
+        )
+      )
+    ),
+    yaxis = list(title = "Max Sustained Wind (mph)", showgrid = TRUE),
+    margin = list(t = 50, b = 40, l = 55, r = 25)
+  )
+```
+
+### 1.5 Hydrological Precipitation & Deluges (inches)
+
+```{r}
+#| label: fig-precip-explorer
+plot_ly() |>
+  add_lines(
+    data = daily_weather, x = ~date, y = ~precip_total,
+    name = "Daily Rainfall Total (in)",
+    line = list(color = "#0288D1", width = 1.3),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#0284c7;\">🌧️ Hydrological Telemetry</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Daily Rainfall:</b> ", precip_total, " inches<br>",
+      "<span style=\"color:#64748b; font-size:12px;\">Measured at Tampa International Airport gauge</span>"
+    )
+  ) |>
+  add_markers(
+    data = disaster_pts, x = ~date, y = ~precip_total,
+    name = "Disaster Event",
+    marker = list(color = "#dc2626", size = 8, symbol = "diamond"),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#dc2626;\">🚨 ", event, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<b>Storm Rainfall:</b> ", precip_total, " inches<br>",
+      "<i>", storm_desc, "</i>"
+    )
+  ) |>
+  add_markers(
+    data = rec_precip, x = ~date, y = ~val,
+    name = "10-Year Record Extreme",
+    marker = list(color = "#f59e0b", size = 12, symbol = "star", line = list(color = "#b45309", width = 1.5)),
+    hoverinfo = "text",
+    text = ~paste0(
+      "<b style=\"font-size:14px; color:#b45309;\">⭐ ", peak_title, "</b><br>",
+      "<b>📅 Date:</b> ", format(date, "%B %d, %Y"), "<br>",
+      "<i>", peak_desc, "</i>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = "Tampa International Airport (KTPA) — Daily Rainfall & Deluges (2015–2024)",
+      font = list(size = 15, color = "#0f172a"),
+      x = 0
+    ),
+    hovermode = "closest",
+    hoverlabel = list(
+      bgcolor = "rgba(255, 255, 255, 0.98)",
+      bordercolor = "#475569",
+      font = list(size = 14, family = "system-ui, -apple-system, sans-serif", color = "#0f172a"),
+      align = "left"
+    ),
+    shapes = event_shapes,
+    annotations = ann_precip,
+    xaxis = list(
+      title = "Date",
+      showgrid = TRUE,
+      rangeslider = list(visible = TRUE),
+      rangeselector = list(
+        buttons = list(
+          list(count = 1, label = "1m", step = "month", stepmode = "backward"),
+          list(count = 6, label = "6m", step = "month", stepmode = "backward"),
+          list(count = 1, label = "1y", step = "year", stepmode = "backward"),
+          list(count = 5, label = "5y", step = "year", stepmode = "backward"),
+          list(step = "all", label = "All 10 Years")
+        )
+      )
+    ),
+    yaxis = list(title = "Daily Rainfall (inches)", showgrid = TRUE),
+    margin = list(t = 50, b = 40, l = 55, r = 25)
   )
 ```
 

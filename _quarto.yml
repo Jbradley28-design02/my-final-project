@@ -11,6 +11,8 @@ website:
         text: Exploration
       - href: story.qmd
         text: Story
+      - href: about.qmd
+        text: About
 
 format:
   html:

@@ -1,0 +1,61 @@
+---
+title: "About the Project & Author"
+author: "Bradley Bloxsom"
+format:
+  html:
+    css: styles.css
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+::: {.news-header}
+<span class="news-badge">PROJECT BACKGROUND & AUTHOR</span>
+<h1 style="color: #ffffff; margin-top: 0.5rem; margin-bottom: 0.5rem; font-size: 2.2rem; font-weight: 800;">About Tampa Bay Weather</h1>
+<div class="news-station-tag">AUTHOR: BRADLEY BLOXSOM &bull; STATION: KTPA ARCHIVE (2015–2024)</div>
+:::
+
+## The Spark: A Lifelong Fascination with Weather
+
+Ever since I was little, my parents would constantly find me sitting in front of the TV, completely captivated by weather reports. While other kids were watching cartoons, I was drawn to the radar loops, the satellite views, and the meteorologists tracking cold fronts, squall lines, and tropical systems. 
+
+That fascination naturally followed me into the classroom. Throughout science classes in late elementary and early middle school, I was always asking *why*—trying to understand what drove high and low pressure, what created thunderstorms, and how the atmosphere operated. Outside of class, I dove into independent research and study, reading whatever I could find about atmospheric science and meteorology. 
+
+When the opportunity came to build this final project, choosing Tampa Bay's weather was a natural extension of a lifelong passion that started in my childhood living room.
+
+---
+
+## The Vision: Blending Exploration and Storytelling
+
+A central goal of this project was to make sure it wasn't just raw data on one hand or pure narrative on the other. Instead, it bridges the two:
+
+::: {.records-grid}
+::: {.record-card}
+<div class="record-title">Interactive Exploration</div>
+<div style="font-size: 0.95rem; color: #475569; margin-top: 0.5rem; line-height: 1.5;">
+Investigating over **100,000+ hourly observations** across a full decade (2015–2024) at Tampa International Airport (KTPA). Here, you can interact with multi-year temperature trends, dew point comfort zones, pressure distributions, and all-time station records.
+</div>
+:::
+
+::: {.record-card}
+<div class="record-title">Atmospheric Storytelling</div>
+<div style="font-size: 0.95rem; color: #475569; margin-top: 0.5rem; line-height: 1.5;">
+Weather is also a lived experience. In the story section, we zoom in to minute-by-minute and hourly telemetry during major tropical events—like **Hurricane Irma's eye passage in 2017**—unraveling the physical drama of barometric collapse and extreme gale winds.
+</div>
+:::
+:::
+
+By combining both perspectives:
+- **Exploration** provides the empirical baseline: what is normal for Tampa Bay, what are the seasonal rhythms, and how rare are extreme events?
+- **Story** brings the human and physical reality into focus: what does it actually feel like when a Category 4 or 5 cyclone churns up the Florida peninsula?
+
+Together, they turn cold meteorological telemetry into a living, interactive analysis.
+
+---
+
+## Data & Methods
+
+- **Primary Historical Dataset:** 10 years (2015–2024) of hourly surface meteorological records from the automated station at Tampa International Airport (KTPA), sourced via NOAA's National Centers for Environmental Information (NCEI) Local Climatological Data (LCD).
+- **Real-Time Data:** Live telemetry fetched dynamically from the National Weather Service (NWS) API.
+- **Technology Stack:** Built using **R**, **Quarto**, and the **tidyverse** (`dplyr`, `ggplot2`, `patchwork`, `plotly`, `leaflet`).

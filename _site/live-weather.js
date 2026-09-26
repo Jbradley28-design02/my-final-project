@@ -388,7 +388,216 @@ function initStoryFigureAnimation() {
   });
 }
 
+// Meteorological Dynamic Atmospheric Background Animation
+function initMeteorologyBackground() {
+  if (document.getElementById("weather-bg-canvas")) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "weather-bg-canvas";
+  document.body.prepend(canvas);
+
+  const ctx = canvas.getContext("2d");
+  let width = 0;
+  let height = 0;
+  let dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.scale(dpr, dpr);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // Mouse interaction for breeze deflection
+  let mouse = { x: -1000, y: -1000, active: false };
+  window.addEventListener("mousemove", function (e) {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    mouse.active = true;
+  });
+  window.addEventListener("mouseleave", function () {
+    mouse.active = false;
+  });
+
+  // Atmospheric drifting cumulus clouds
+  const cloudCount = 5;
+  const clouds = [];
+  for (let i = 0; i < cloudCount; i++) {
+    clouds.push({
+      x: Math.random() * width,
+      y: Math.random() * (height * 0.75),
+      speed: 0.12 + Math.random() * 0.22,
+      scale: 0.7 + Math.random() * 0.7,
+      opacity: 0.25 + Math.random() * 0.25,
+      puffs: [
+        { dx: 0, dy: 0, r: 40 + Math.random() * 20 },
+        { dx: 30, dy: -10, r: 35 + Math.random() * 15 },
+        { dx: 65, dy: 5, r: 32 + Math.random() * 15 },
+        { dx: -30, dy: 5, r: 30 + Math.random() * 12 },
+        { dx: 20, dy: 10, r: 25 + Math.random() * 10 }
+      ]
+    });
+  }
+
+  // Wind streamline particles (jet stream & sea breeze vectors)
+  const particleCount = 45;
+  const particles = [];
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      speed: 1.2 + Math.random() * 1.8,
+      history: [],
+      maxHistory: 10 + Math.floor(Math.random() * 8),
+      alpha: 0.18 + Math.random() * 0.22,
+      seed: Math.random() * 100
+    });
+  }
+
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let animId = null;
+  let time = 0;
+
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+
+    // 1. Soft atmospheric sky gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+    skyGrad.addColorStop(0, "rgba(224, 242, 254, 0.45)");
+    skyGrad.addColorStop(0.5, "rgba(240, 249, 255, 0.25)");
+    skyGrad.addColorStop(1, "rgba(248, 250, 252, 0)");
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Synoptic Isobar Contours
+    ctx.save();
+    ctx.setLineDash([8, 14]);
+    ctx.lineWidth = 1.2;
+    const isobarYs = [height * 0.25, height * 0.55, height * 0.85];
+    const isobarLabels = ["1020 hPa", "1016 hPa", "1012 hPa"];
+
+    for (let j = 0; j < isobarYs.length; j++) {
+      const baseY = isobarYs[j];
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.22)";
+
+      for (let x = 0; x <= width; x += 15) {
+        const wave = Math.sin(x * 0.003 + time * 0.25 + j) * 28 + Math.cos(x * 0.0015 - time * 0.15) * 15;
+        const y = baseY + wave;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Isobar label
+      ctx.fillStyle = "rgba(100, 116, 139, 0.35)";
+      ctx.font = "10px monospace";
+      const labelX = (width * 0.15 + j * (width * 0.25)) % (width - 60);
+      const labelY = baseY + Math.sin(labelX * 0.003 + time * 0.25 + j) * 28 + 14;
+      ctx.fillText(isobarLabels[j], labelX, labelY);
+    }
+    ctx.restore();
+
+    // 3. Drifting Cumulus Clouds
+    for (let i = 0; i < clouds.length; i++) {
+      const c = clouds[i];
+      c.x += c.speed;
+      if (c.x - 120 * c.scale > width) {
+        c.x = -150 * c.scale;
+        c.y = Math.random() * (height * 0.75);
+      }
+
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.scale(c.scale, c.scale);
+
+      for (let p = 0; p < c.puffs.length; p++) {
+        const puff = c.puffs[p];
+        const radGrad = ctx.createRadialGradient(puff.dx, puff.dy, puff.r * 0.15, puff.dx, puff.dy, puff.r);
+        radGrad.addColorStop(0, `rgba(255, 255, 255, ${c.opacity})`);
+        radGrad.addColorStop(0.7, `rgba(240, 249, 255, ${c.opacity * 0.6})`);
+        radGrad.addColorStop(1, "rgba(240, 249, 255, 0)");
+        ctx.fillStyle = radGrad;
+        ctx.beginPath();
+        ctx.arc(puff.dx, puff.dy, puff.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 4. Wind Streamline Particles
+    time += 0.01;
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.history.push({ x: p.x, y: p.y });
+      if (p.history.length > p.maxHistory) p.history.shift();
+
+      let vx = p.speed * (1.2 + 0.35 * Math.sin(p.y * 0.004 + time));
+      let vy = p.speed * 0.5 * Math.sin(p.x * 0.003 + p.seed);
+
+      // Interactive mouse breeze deflection
+      if (mouse.active) {
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 180 && dist > 0) {
+          const force = (180 - dist) / 180;
+          vx += (dx / dist) * force * 3;
+          vy += (dy / dist) * force * 3;
+        }
+      }
+
+      p.x += vx;
+      p.y += vy;
+
+      if (p.x > width + 40) {
+        p.x = -30;
+        p.y = Math.random() * height;
+        p.history = [];
+      }
+      if (p.y > height + 30) p.y = -20;
+      if (p.y < -30) p.y = height + 20;
+
+      if (p.history.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(p.history[0].x, p.history[0].y);
+        for (let h = 1; h < p.history.length; h++) {
+          ctx.lineTo(p.history[h].x, p.history[h].y);
+        }
+        ctx.strokeStyle = `rgba(14, 165, 233, ${p.alpha})`;
+        ctx.lineWidth = 1.6;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha * 1.5})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    if (!prefersReduced && !document.hidden) {
+      animId = requestAnimationFrame(render);
+    }
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && !prefersReduced) {
+      cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(render);
+    }
+  });
+
+  render();
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  initMeteorologyBackground();
   fetchLiveKTPAWeather();
   initLiveCardScrollAnimation();
   initPlotlyScrollAnimations();
